@@ -13,6 +13,13 @@ type Asset = "BTC" | "USDT";
 type Mode = "deposit" | "withdrawal";
 type DepositStep = "details" | "payment" | "submitted";
 
+function formatBal(n: number, asset: Asset) {
+  if (asset === "BTC") {
+    return `${n.toLocaleString("en-US", { maximumFractionDigits: 8 })} BTC`;
+  }
+  return `${n.toLocaleString("en-US", { maximumFractionDigits: 2, minimumFractionDigits: 2 })} USDT`;
+}
+
 const depositSchema = z.object({
   amount: z.number().positive("Amount must be positive").max(1_000_000),
 });
@@ -417,7 +424,7 @@ export function TransactionModal({
                 <p>Withdrawals are processed within 1–3 business days.</p>
               </div>
 
-              <Button type="submit" variant="hero" size="lg" className="w-full" disabled={submitting}>
+              <Button type="submit" variant="hero" size="lg" className="w-full" disabled={submitting || exceedsBalance || loadingBalances}>
                 {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Request Withdrawal"}
               </Button>
             </form>
