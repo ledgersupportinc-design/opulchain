@@ -86,16 +86,16 @@ function Dashboard() {
       <Navbar />
       <div className="relative">
         <div className="mesh-bg opacity-50" />
-        <main className="relative z-10 mx-auto max-w-7xl px-6 py-10">
-          <header className="mb-8 fade-in">
-            <h1 className="font-display text-3xl font-bold md:text-4xl">
+        <main className="relative z-10 mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
+          <header className="mb-6 fade-in sm:mb-8">
+            <h1 className="font-display text-2xl font-bold sm:text-3xl md:text-4xl">
               Welcome back{user.user_metadata?.full_name ? `, ${user.user_metadata.full_name.split(" ")[0]}` : ""}.
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">Here's your portfolio overview.</p>
           </header>
 
           {/* Portfolio cards */}
-          <section className="grid gap-4 md:grid-cols-3">
+          <section className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
             <div className="rounded-2xl glass p-6 fade-in">
               <div className="mb-4 flex items-center justify-between">
                 <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Total Balance</span>
