@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, useCallback, useRef } from "react";
-import { Loader2, Users, ArrowDownToLine, ArrowUpFromLine, MessageSquare, Pencil, Check, X, Send, ShieldAlert } from "lucide-react";
+import { Loader2, Users, ArrowDownToLine, ArrowUpFromLine, MessageSquare, Pencil, Check, X, Send, ShieldAlert, Wallet as WalletIcon, Save } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 import { Navbar } from "@/components/Navbar";
 import { BtcLogo, UsdtLogo } from "@/components/CryptoLogos";
@@ -21,7 +22,7 @@ export const Route = createFileRoute("/admin")({
   component: AdminPage,
 });
 
-type Tab = "users" | "deposits" | "withdrawals" | "chats";
+type Tab = "users" | "deposits" | "withdrawals" | "chats" | "wallets";
 
 interface UserRow {
   id: string; email: string; full_name: string | null; created_at: string;
@@ -83,7 +84,8 @@ function AdminPage() {
             <TabBtn active={tab === "users"} onClick={() => setTab("users")} icon={<Users className="h-4 w-4" />}>Users</TabBtn>
             <TabBtn active={tab === "deposits"} onClick={() => setTab("deposits")} icon={<ArrowDownToLine className="h-4 w-4" />}>Deposits</TabBtn>
             <TabBtn active={tab === "withdrawals"} onClick={() => setTab("withdrawals")} icon={<ArrowUpFromLine className="h-4 w-4" />}>Withdrawals</TabBtn>
-            <TabBtn active={tab === "chats"} onClick={() => setTab("chats")} icon={<MessageSquare className="h-4 w-4" />}>Chats</TabBtn>
+            <TabBtn active={tab === "chats"} onClick={() => setTab("chats")} icon={<MessageSquare className="h-4 w-4" />}>Live Support</TabBtn>
+            <TabBtn active={tab === "wallets"} onClick={() => setTab("wallets")} icon={<WalletIcon className="h-4 w-4" />}>Wallet Settings</TabBtn>
           </div>
         </div>
 
@@ -91,6 +93,7 @@ function AdminPage() {
         {tab === "deposits" && <TxTab type="deposit" />}
         {tab === "withdrawals" && <TxTab type="withdrawal" />}
         {tab === "chats" && <ChatsTab />}
+        {tab === "wallets" && <WalletsTab />}
       </main>
     </div>
   );
@@ -519,3 +522,107 @@ function ChatsTab() {
 function Spinner() {
   return <div className="flex items-center justify-center py-16"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>;
 }
+
+// ============ WALLETS TAB ============
+function WalletsTab() {
+  const [btc, setBtc] = useState("");
+  const [usdt, setUsdt] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.from("admin_wallets").select("asset,address");
+      if (data) {
+        for (const r of data) {
+          if (r.asset === "BTC") setBtc(r.address ?? "");
+          if (r.asset === "USDT") setUsdt(r.address ?? "");
+        }
+      }
+      setLoading(false);
+    })();
+  }, []);
+
+  const save = async () => {
+    setSaving(true);
+    const { error } = await supabase
+      .from("admin_wallets")
+      .upsert(
+        [
+          { asset: "BTC" as const, address: btc.trim() },
+          { asset: "USDT" as const, address: usdt.trim() },
+        ],
+        { onConflict: "asset" },
+      );
+    setSaving(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Wallet addresses saved");
+  };
+
+  if (loading) return <Spinner />;
+
+  return (
+    <div className="space-y-6">
+      <div className="rounded-2xl glass p-5 sm:p-6">
+        <p className="text-sm text-muted-foreground">
+          These addresses are shown to users in the deposit screen alongside a QR code. Only update them with verified, monitored wallets.
+        </p>
+      </div>
+
+      <WalletField
+        label="BTC Wallet Address"
+        placeholder="bc1q…"
+        value={btc}
+        onChange={setBtc}
+        accent={<BtcLogo className="h-5 w-5" />}
+      />
+      <WalletField
+        label="USDT (ERC20) Wallet Address"
+        placeholder="0x…"
+        value={usdt}
+        onChange={setUsdt}
+        accent={<UsdtLogo className="h-5 w-5" />}
+      />
+
+      <div className="flex justify-end">
+        <Button variant="hero" size="lg" onClick={save} disabled={saving}>
+          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Save className="mr-2 h-4 w-4" /> Save Addresses</>}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function WalletField({
+  label, value, onChange, placeholder, accent,
+}: { label: string; value: string; onChange: (v: string) => void; placeholder: string; accent: React.ReactNode }) {
+  return (
+    <div className="rounded-2xl glass p-5 sm:p-6">
+      <label className="mb-2 flex items-center gap-2 text-sm font-medium">
+        {accent} {label}
+      </label>
+      <div className="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-start">
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          maxLength={200}
+          className="input-glow w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 font-mono text-xs sm:text-sm"
+        />
+        <div className="flex shrink-0 items-center justify-center self-center sm:self-auto">
+          <div className="rounded-lg bg-white p-2">
+            {value.trim() ? (
+              <QRCodeSVG value={value.trim()} size={104} level="M" includeMargin={false} />
+            ) : (
+              <div className="flex h-[104px] w-[104px] items-center justify-center text-[10px] text-muted-foreground">
+                QR preview
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+

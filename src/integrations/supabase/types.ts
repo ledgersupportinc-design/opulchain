@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_wallets: {
+        Row: {
+          address: string
+          asset: Database["public"]["Enums"]["asset_type"]
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string
+          asset: Database["public"]["Enums"]["asset_type"]
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          asset?: Database["public"]["Enums"]["asset_type"]
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
           created_at: string
