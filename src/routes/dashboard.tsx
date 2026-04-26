@@ -5,6 +5,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { BtcLogo, UsdtLogo } from "@/components/CryptoLogos";
 import { TransactionModal } from "@/components/TransactionModal";
+import { LiveActivityFeed } from "@/components/LiveActivityFeed";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCrypto, formatDate, formatUsd, toUsd } from "@/lib/format";
@@ -206,6 +207,11 @@ function Dashboard() {
                 </>
               )}
             </div>
+          </section>
+
+          {/* Live Activity */}
+          <section className="mt-10">
+            <LiveActivityFeed variant="sidebar" title="Live Activity" />
           </section>
         </main>
       </div>

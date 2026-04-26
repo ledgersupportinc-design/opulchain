@@ -3,6 +3,7 @@ import { Shield, Zap, TrendingUp, ArrowRight } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { BtcLogo, UsdtLogo } from "@/components/CryptoLogos";
+import { LiveActivityFeed } from "@/components/LiveActivityFeed";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -109,6 +110,11 @@ function Landing() {
             </Link>
           </div>
         </div>
+      </section>
+
+      {/* Live Activity */}
+      <section className="relative z-10 mx-auto max-w-7xl px-4 pb-16 sm:px-6 sm:pb-24">
+        <LiveActivityFeed variant="section" title="Global Activity" />
       </section>
 
       <Footer />
