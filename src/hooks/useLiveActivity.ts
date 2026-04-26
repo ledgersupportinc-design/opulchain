@@ -25,8 +25,12 @@ function randomDelayMs(): number {
 }
 
 export function useLiveActivity(): LiveActivityItem[] {
-  const [items, setItems] = useState<LiveActivityItem[]>(() => {
-    // Seed with 4 staggered entries so the feed is never empty
+  // Empty initial state ensures SSR and first client render match.
+  // Real entries are populated in useEffect (client-only).
+  const [items, setItems] = useState<LiveActivityItem[]>([]);
+
+  // Seed initial entries on the client only (avoids hydration mismatch).
+  useEffect(() => {
     const seed: LiveActivityItem[] = [];
     let prevName: string | undefined;
     for (let i = 0; i < 4; i++) {
@@ -38,8 +42,8 @@ export function useLiveActivity(): LiveActivityItem[] {
         agoSec: i * 45 + Math.floor(Math.random() * 30),
       });
     }
-    return seed;
-  });
+    setItems(seed);
+  }, []);
 
   // Push a new entry every 4–7s
   useEffect(() => {
