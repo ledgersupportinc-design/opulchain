@@ -13,6 +13,13 @@ type Asset = "BTC" | "USDT";
 type Mode = "deposit" | "withdrawal";
 type DepositStep = "details" | "payment" | "submitted";
 
+function formatBal(n: number, asset: Asset) {
+  if (asset === "BTC") {
+    return `${n.toLocaleString("en-US", { maximumFractionDigits: 8 })} BTC`;
+  }
+  return `${n.toLocaleString("en-US", { maximumFractionDigits: 2, minimumFractionDigits: 2 })} USDT`;
+}
+
 const depositSchema = z.object({
   amount: z.number().positive("Amount must be positive").max(1_000_000),
 });
@@ -42,6 +49,10 @@ export function TransactionModal({
   const [adminAddresses, setAdminAddresses] = useState<Record<Asset, string>>({ BTC: "", USDT: "" });
   const [loadingAddrs, setLoadingAddrs] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  // Withdrawal-only: live wallet balances so we can block over-withdrawals
+  const [balances, setBalances] = useState<Record<Asset, number>>({ BTC: 0, USDT: 0 });
+  const [loadingBalances, setLoadingBalances] = useState(false);
 
   const reset = () => {
     setAsset("BTC");
@@ -76,6 +87,28 @@ export function TransactionModal({
       });
     return () => { cancelled = true; };
   }, [open, mode]);
+
+  // Load wallet balances when opening a withdrawal
+  useEffect(() => {
+    if (!open || mode !== "withdrawal" || !user) return;
+    let cancelled = false;
+    setLoadingBalances(true);
+    supabase
+      .from("wallets")
+      .select("btc_balance,usdt_balance")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled) return;
+        setBalances({
+          BTC: Number(data?.btc_balance ?? 0),
+          USDT: Number(data?.usdt_balance ?? 0),
+        });
+        setLoadingBalances(false);
+      });
+    return () => { cancelled = true; };
+  }, [open, mode, user]);
+
 
   const isDeposit = mode === "deposit";
   const currentAdminAddr = adminAddresses[asset];
@@ -129,6 +162,13 @@ export function TransactionModal({
     const parsed = withdrawSchema.safeParse({ amount: amt, wallet_address: walletAddress });
     if (!parsed.success) { toast.error(parsed.error.issues[0].message); return; }
 
+    // Block over-withdrawal client-side
+    const available = balances[asset];
+    if (amt > available) {
+      toast.error(`Insufficient ${asset} balance. Available: ${formatBal(available, asset)}`);
+      return;
+    }
+
     setSubmitting(true);
     const { error } = await supabase.from("transactions").insert({
       user_id: user.id,
@@ -149,6 +189,16 @@ export function TransactionModal({
     if (!n || Number.isNaN(n)) return "—";
     return asset === "BTC" ? `${n} BTC` : `${n.toLocaleString("en-US")} USDT`;
   }, [amount, asset]);
+
+  // Withdrawal balance helpers
+  const available = balances[asset];
+  const numericAmount = Number(amount);
+  const exceedsBalance =
+    !isDeposit &&
+    !loadingBalances &&
+    amount !== "" &&
+    Number.isFinite(numericAmount) &&
+    numericAmount > available;
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -330,13 +380,33 @@ export function TransactionModal({
               </div>
 
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Amount ({asset})</label>
+                <div className="mb-1.5 flex items-center justify-between">
+                  <label className="block text-xs font-medium text-muted-foreground">Amount ({asset})</label>
+                  <button
+                    type="button"
+                    onClick={() => setAmount(String(available))}
+                    disabled={loadingBalances || available <= 0}
+                    className="text-xs font-medium text-primary hover:underline disabled:opacity-40 disabled:no-underline"
+                  >
+                    Max
+                  </button>
+                </div>
                 <input
-                  type="number" step="any" inputMode="decimal"
+                  type="number" step="any" min="0" inputMode="decimal"
                   value={amount} onChange={(e) => setAmount(e.target.value)}
                   placeholder="0.00"
-                  className="input-glow w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-base"
+                  className={`input-glow w-full rounded-lg border bg-white/5 px-3 py-2.5 text-base ${
+                    exceedsBalance ? "border-destructive/60" : "border-white/10"
+                  }`}
                 />
+                <div className="mt-1.5 flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">
+                    Available: <span className="font-mono text-foreground">{loadingBalances ? "…" : formatBal(available, asset)}</span>
+                  </span>
+                  {exceedsBalance && (
+                    <span className="font-medium text-destructive">Exceeds balance</span>
+                  )}
+                </div>
               </div>
 
               <div>
@@ -354,7 +424,7 @@ export function TransactionModal({
                 <p>Withdrawals are processed within 1–3 business days.</p>
               </div>
 
-              <Button type="submit" variant="hero" size="lg" className="w-full" disabled={submitting}>
+              <Button type="submit" variant="hero" size="lg" className="w-full" disabled={submitting || exceedsBalance || loadingBalances}>
                 {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Request Withdrawal"}
               </Button>
             </form>
