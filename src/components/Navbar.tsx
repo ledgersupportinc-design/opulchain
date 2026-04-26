@@ -27,21 +27,21 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-white/5 bg-background/70 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-        <Link to={user ? "/dashboard" : "/"}>
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 sm:py-4">
+        <Link to={user ? "/dashboard" : "/"} className="shrink-0">
           <BrandLogo />
         </Link>
-        <nav className="flex items-center gap-3">
+        <nav className="flex items-center gap-2 sm:gap-3">
           {user ? (
             <div className="relative" ref={menuRef}>
               <button
                 onClick={() => setOpen((o) => !o)}
-                className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 py-1.5 pl-1.5 pr-3 transition hover:bg-white/10"
+                className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 py-1.5 pl-1.5 pr-2 transition hover:bg-white/10 sm:pr-3"
               >
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/60 text-xs font-semibold">
                   {initials}
                 </div>
-                <span className="hidden text-sm sm:inline">
+                <span className="hidden max-w-[120px] truncate text-sm sm:inline">
                   {user.user_metadata?.full_name || user.email?.split("@")[0]}
                 </span>
                 <ChevronDown className="h-4 w-4 text-muted-foreground" />
@@ -83,8 +83,8 @@ export function Navbar() {
             </div>
           ) : (
             <>
-              <Link to="/login" className="rounded-lg px-4 py-2 text-sm hover:bg-white/5">Sign In</Link>
-              <Link to="/signup" className="rounded-lg btn-primary px-4 py-2 text-sm font-medium">Get Started</Link>
+              <Link to="/login" className="rounded-lg px-3 py-2 text-sm hover:bg-white/5 sm:px-4">Sign In</Link>
+              <Link to="/signup" className="rounded-lg btn-primary px-3 py-2 text-sm font-medium sm:px-4">Get Started</Link>
             </>
           )}
         </nav>
