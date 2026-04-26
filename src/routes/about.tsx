@@ -2,6 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Lock, Zap, MessageSquare, TrendingUp } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import jamesPhoto from "@/assets/team-james.jpg";
+import sophiaPhoto from "@/assets/team-sophia.jpg";
+import allenPhoto from "@/assets/team-allen.jpg";
 
 export const Route = createFileRoute("/about")({
   head: () => ({
@@ -58,23 +61,21 @@ const team = [
     name: "James Harrington",
     title: "CEO & Co-Founder",
     bio: "Two decades shaping fintech and digital assets at a global scale.",
+    photo: jamesPhoto,
   },
   {
     name: "Sophia Chen",
     title: "Chief Technology Officer",
     bio: "Builds the secure, low-latency systems behind every OpulChain transaction.",
+    photo: sophiaPhoto,
   },
   {
     name: "Allen Jones",
     title: "Head of Operations",
     bio: "Leads the people side: support, compliance, and a flawless investor experience.",
+    photo: allenPhoto,
   },
 ];
-
-function avatarUrl(name: string) {
-  const q = encodeURIComponent(name);
-  return `https://ui-avatars.com/api/?name=${q}&background=1A6BFF&color=fff&size=256&bold=true`;
-}
 
 function AboutPage() {
   return (
@@ -147,10 +148,12 @@ function AboutPage() {
           {team.map((m) => (
             <div key={m.name} className="glass p-6 text-center">
               <img
-                src={avatarUrl(m.name)}
-                alt={m.name}
+                src={m.photo}
+                alt={`Portrait of ${m.name}`}
                 loading="lazy"
-                className="mx-auto h-24 w-24 rounded-full ring-2 ring-primary/40"
+                width={256}
+                height={256}
+                className="mx-auto h-28 w-28 rounded-full object-cover ring-2 ring-primary/50 shadow-lg"
               />
               <h3 className="mt-4 font-display text-lg font-semibold">{m.name}</h3>
               <p className="text-sm text-gold">{m.title}</p>
