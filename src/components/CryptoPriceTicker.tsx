@@ -18,8 +18,6 @@ function ChangeBadge({ change }: { change: number }) {
       }`}
     >
       <Icon className="h-2.5 w-2.5" />
-      {positive ? "+" : ""}
-      {change.toFixed(2)}%
     </span>
   );
 }
