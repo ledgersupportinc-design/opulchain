@@ -69,6 +69,9 @@ function Dashboard() {
     return () => { supabase.removeChannel(ch); };
   }, [user, load]);
 
+  // Live prices for portfolio cards (with sane fallbacks to reference rates)
+  const { prices } = useCryptoPrices();
+
   if (loading || !user) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -79,8 +82,6 @@ function Dashboard() {
 
   const btc = wallet?.btc_balance ?? 0;
   const usdt = wallet?.usdt_balance ?? 0;
-  // Live prices for portfolio cards (with sane fallbacks to reference rates)
-  const { prices } = useCryptoPrices();
   const btcPrice = prices?.BTC.usd;
   const usdtPrice = prices?.USDT.usd ?? 1;
   const btcUsd = btcPrice ? btc * btcPrice : toUsd(btc, "BTC");
