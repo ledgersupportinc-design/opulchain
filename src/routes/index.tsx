@@ -4,7 +4,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { BtcLogo, UsdtLogo } from "@/components/CryptoLogos";
 import { LiveActivityFeed } from "@/components/LiveActivityFeed";
-import { CryptoPriceStrip } from "@/components/CryptoPriceTicker";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -48,9 +48,6 @@ function Landing() {
                 Sign In
               </Link>
             </div>
-
-            {/* Live price strip */}
-            <CryptoPriceStrip />
 
             {/* Floating asset chips */}
             <div className="mt-12 flex flex-wrap items-center justify-center gap-3 sm:mt-16 sm:gap-4 fade-in">
