@@ -63,6 +63,14 @@ export function ChatWidget() {
     }
   }, [open]);
 
+  // Allow other components (e.g., Support page CTA) to open the chat via a global event
+  useEffect(() => {
+    if (!visible) return;
+    const handler = () => setOpen(true);
+    window.addEventListener("opulchain:open-chat", handler);
+    return () => window.removeEventListener("opulchain:open-chat", handler);
+  }, [visible]);
+
   // Load messages + subscribe
   useEffect(() => {
     if (!user || isAdmin) return;
