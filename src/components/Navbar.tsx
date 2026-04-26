@@ -3,6 +3,8 @@ import { useState, useRef, useEffect } from "react";
 import { ChevronDown, LogOut, User, Settings, Shield } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { BrandLogo } from "./CryptoLogos";
+import { CryptoPriceTicker } from "./CryptoPriceTicker";
+import { NotificationBell } from "./NotificationBell";
 
 export function Navbar() {
   const { user, isAdmin, signOut } = useAuth();
@@ -32,7 +34,10 @@ export function Navbar() {
           <BrandLogo />
         </Link>
         <nav className="flex items-center gap-2 sm:gap-3">
+          <CryptoPriceTicker />
           {user ? (
+            <>
+              <NotificationBell />
             <div className="relative" ref={menuRef}>
               <button
                 onClick={() => setOpen((o) => !o)}
@@ -81,6 +86,7 @@ export function Navbar() {
                 </div>
               )}
             </div>
+            </>
           ) : (
             <>
               <Link to="/login" className="rounded-lg px-3 py-2 text-sm hover:bg-white/5 sm:px-4">Sign In</Link>
