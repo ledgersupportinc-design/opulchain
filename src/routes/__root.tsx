@@ -16,9 +16,21 @@ function NotFoundComponent() {
         <p className="mt-2 text-sm text-muted-foreground">
           The page you're looking for doesn't exist or has been moved.
         </p>
-        <div className="mt-6">
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
           <Link to="/" className="inline-flex items-center justify-center rounded-lg btn-primary px-5 py-2.5 text-sm font-medium">
             Go home
+          </Link>
+          <Link to="/about" className="inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm hover:bg-white/10">
+            About
+          </Link>
+          <Link to="/support" className="inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm hover:bg-white/10">
+            Support
+          </Link>
+          <Link to="/terms" className="inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm hover:bg-white/10">
+            Terms
+          </Link>
+          <Link to="/legal" className="inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm hover:bg-white/10">
+            Privacy
           </Link>
         </div>
       </div>

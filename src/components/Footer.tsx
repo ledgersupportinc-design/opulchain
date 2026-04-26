@@ -15,15 +15,15 @@ export function Footer() {
         <div>
           <h4 className="mb-3 text-sm font-semibold">Company</h4>
           <ul className="space-y-2 text-sm text-muted-foreground">
-            <li><Link to="/" className="hover:text-foreground">About</Link></li>
-            <li><Link to="/" className="hover:text-foreground">Support</Link></li>
+            <li><Link to="/about" className="hover:text-foreground">About</Link></li>
+            <li><Link to="/support" className="hover:text-foreground">Support</Link></li>
           </ul>
         </div>
         <div>
           <h4 className="mb-3 text-sm font-semibold">Legal</h4>
           <ul className="space-y-2 text-sm text-muted-foreground">
-            <li><Link to="/" className="hover:text-foreground">Terms</Link></li>
-            <li><Link to="/" className="hover:text-foreground">Privacy</Link></li>
+            <li><Link to="/terms" className="hover:text-foreground">Terms</Link></li>
+            <li><Link to="/legal" className="hover:text-foreground">Privacy</Link></li>
           </ul>
         </div>
       </div>

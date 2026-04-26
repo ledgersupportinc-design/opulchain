@@ -34,6 +34,13 @@ export function Navbar() {
           <BrandLogo />
         </Link>
         <nav className="flex items-center gap-2 sm:gap-3">
+          <Link
+            to="/support"
+            className="hidden rounded-lg px-3 py-2 text-sm text-muted-foreground transition hover:bg-white/5 hover:text-foreground md:inline-flex"
+            activeProps={{ className: "hidden md:inline-flex rounded-lg px-3 py-2 text-sm text-foreground bg-white/5" }}
+          >
+            Support
+          </Link>
           <CryptoPriceTicker />
           {user ? (
             <>
