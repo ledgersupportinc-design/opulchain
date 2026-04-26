@@ -37,6 +37,10 @@ export const Route = createRootRoute({
       { property: "og:description", content: "Buy, hold, and grow Bitcoin and USDT in one secure luxury investment platform." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { name: "twitter:title", content: "OpulChain — Invest Smarter. Grow Faster." },
+      { name: "twitter:description", content: "Buy, hold, and grow Bitcoin and USDT in one secure luxury investment platform." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/75b29024-51ac-4843-8dab-875c2da50770" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/75b29024-51ac-4843-8dab-875c2da50770" },
     ],
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
