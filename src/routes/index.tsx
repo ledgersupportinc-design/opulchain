@@ -69,12 +69,12 @@ function Landing() {
       </section>
 
       {/* Why OpulChain */}
-      <section className="relative z-10 mx-auto max-w-7xl px-6 py-24">
-        <div className="mb-14 text-center">
-          <h2 className="font-display text-4xl font-bold md:text-5xl">Why OpulChain?</h2>
-          <p className="mt-3 text-muted-foreground">Built for clarity, security, and confidence.</p>
+      <section className="relative z-10 mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-24">
+        <div className="mb-10 text-center sm:mb-14">
+          <h2 className="font-display text-3xl font-bold sm:text-4xl md:text-5xl">Why OpulChain?</h2>
+          <p className="mt-3 text-sm text-muted-foreground sm:text-base">Built for clarity, security, and confidence.</p>
         </div>
-        <div className="grid gap-6 md:grid-cols-3">
+        <div className="grid gap-5 sm:gap-6 md:grid-cols-3">
           <FeatureCard
             icon={<Shield className="h-6 w-6" />}
             title="Secure Wallets"
@@ -94,14 +94,14 @@ function Landing() {
       </section>
 
       {/* CTA banner */}
-      <section className="relative z-10 mx-auto max-w-7xl px-6 pb-24">
-        <div className="relative overflow-hidden rounded-3xl glass-strong p-10 text-center md:p-16">
+      <section className="relative z-10 mx-auto max-w-7xl px-4 pb-16 sm:px-6 sm:pb-24">
+        <div className="relative overflow-hidden rounded-3xl glass-strong p-8 text-center sm:p-10 md:p-16">
           <div className="absolute inset-0 opacity-60">
             <div className="mesh-bg" />
           </div>
           <div className="relative">
-            <h3 className="font-display text-3xl font-bold md:text-4xl">Ready to start?</h3>
-            <p className="mx-auto mt-3 max-w-md text-muted-foreground">
+            <h3 className="font-display text-2xl font-bold sm:text-3xl md:text-4xl">Ready to start?</h3>
+            <p className="mx-auto mt-3 max-w-md text-sm text-muted-foreground sm:text-base">
               Create your free account and make your first deposit in minutes.
             </p>
             <Link to="/signup" className="mt-6 inline-flex h-12 items-center justify-center gap-2 rounded-xl btn-gold px-8 text-base font-semibold">
