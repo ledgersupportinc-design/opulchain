@@ -47,7 +47,6 @@ export function OpulOrb({ className = "h-7 w-7" }: { className?: string }) {
 export function BrandLogo({ className = "" }: { className?: string }) {
   return (
     <div className={`flex items-center gap-2 ${className}`}>
-      <OpulOrb />
       <span className="font-display text-xl font-bold tracking-tight">
         Opul<span className="text-gradient-blue">Chain</span>
       </span>
