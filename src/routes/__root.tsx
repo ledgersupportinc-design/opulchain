@@ -85,6 +85,15 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
+  // Clear the auto-reload guard once the app successfully mounts so a future
+  // transient error can recover too.
+  if (typeof window !== "undefined") {
+    try {
+      sessionStorage.removeItem("opul:auto-reload");
+    } catch {
+      /* ignore */
+    }
+  }
   return (
     <AuthProvider>
       <AnnouncementBanner />
