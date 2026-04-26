@@ -65,7 +65,7 @@ const team = [
     bio: "Builds the secure, low-latency systems behind every OpulChain transaction.",
   },
   {
-    name: "Daniel Okafor",
+    name: "Allen Jones",
     title: "Head of Operations",
     bio: "Leads the people side: support, compliance, and a flawless investor experience.",
   },
