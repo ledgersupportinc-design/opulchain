@@ -86,16 +86,16 @@ function Dashboard() {
       <Navbar />
       <div className="relative">
         <div className="mesh-bg opacity-50" />
-        <main className="relative z-10 mx-auto max-w-7xl px-6 py-10">
-          <header className="mb-8 fade-in">
-            <h1 className="font-display text-3xl font-bold md:text-4xl">
+        <main className="relative z-10 mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
+          <header className="mb-6 fade-in sm:mb-8">
+            <h1 className="font-display text-2xl font-bold sm:text-3xl md:text-4xl">
               Welcome back{user.user_metadata?.full_name ? `, ${user.user_metadata.full_name.split(" ")[0]}` : ""}.
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">Here's your portfolio overview.</p>
           </header>
 
           {/* Portfolio cards */}
-          <section className="grid gap-4 md:grid-cols-3">
+          <section className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
             <div className="rounded-2xl glass p-6 fade-in">
               <div className="mb-4 flex items-center justify-between">
                 <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Total Balance</span>
@@ -122,16 +122,16 @@ function Dashboard() {
           </section>
 
           {/* Action buttons */}
-          <section className="mt-6 flex flex-wrap gap-3">
+          <section className="mt-6 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap">
             <button
               onClick={() => setModal("deposit")}
-              className="inline-flex h-12 items-center gap-2 rounded-xl bg-success px-6 text-sm font-semibold text-success-foreground shadow-[0_8px_24px_-8px_oklch(0.70_0.18_155_/_0.55)] transition hover:-translate-y-0.5 hover:brightness-110"
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-success px-6 text-sm font-semibold text-success-foreground shadow-[0_8px_24px_-8px_oklch(0.70_0.18_155_/_0.55)] transition hover:-translate-y-0.5 hover:brightness-110"
             >
               <ArrowDownToLine className="h-4 w-4" /> Deposit
             </button>
             <button
               onClick={() => setModal("withdrawal")}
-              className="inline-flex h-12 items-center gap-2 rounded-xl bg-destructive px-6 text-sm font-semibold text-destructive-foreground shadow-[0_8px_24px_-8px_oklch(0.62_0.22_22_/_0.55)] transition hover:-translate-y-0.5 hover:brightness-110"
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-destructive px-6 text-sm font-semibold text-destructive-foreground shadow-[0_8px_24px_-8px_oklch(0.62_0.22_22_/_0.55)] transition hover:-translate-y-0.5 hover:brightness-110"
             >
               <ArrowUpFromLine className="h-4 w-4" /> Withdraw
             </button>

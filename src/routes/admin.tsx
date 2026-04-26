@@ -69,20 +69,22 @@ function AdminPage() {
     <div className="relative min-h-screen">
       <Navbar />
       <div className="mesh-bg opacity-40" />
-      <main className="relative z-10 mx-auto max-w-7xl px-6 py-10">
-        <header className="mb-8">
+      <main className="relative z-10 mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
+        <header className="mb-6 sm:mb-8">
           <div className="inline-flex items-center gap-2 rounded-full bg-gold/15 px-3 py-1 text-xs font-medium text-gold ring-1 ring-gold/30">
             <ShieldAlert className="h-3 w-3" /> Admin Panel
           </div>
-          <h1 className="mt-3 font-display text-3xl font-bold md:text-4xl">Operations Console</h1>
+          <h1 className="mt-3 font-display text-2xl font-bold sm:text-3xl md:text-4xl">Operations Console</h1>
           <p className="mt-1 text-sm text-muted-foreground">Manage users, approve transactions, reply to chats.</p>
         </header>
 
-        <div className="mb-6 flex flex-wrap gap-2 rounded-xl glass p-1.5">
-          <TabBtn active={tab === "users"} onClick={() => setTab("users")} icon={<Users className="h-4 w-4" />}>Users</TabBtn>
-          <TabBtn active={tab === "deposits"} onClick={() => setTab("deposits")} icon={<ArrowDownToLine className="h-4 w-4" />}>Deposits</TabBtn>
-          <TabBtn active={tab === "withdrawals"} onClick={() => setTab("withdrawals")} icon={<ArrowUpFromLine className="h-4 w-4" />}>Withdrawals</TabBtn>
-          <TabBtn active={tab === "chats"} onClick={() => setTab("chats")} icon={<MessageSquare className="h-4 w-4" />}>Chats</TabBtn>
+        <div className="mb-6 -mx-4 overflow-x-auto px-4 sm:mx-0 sm:overflow-visible sm:px-0">
+          <div className="flex min-w-max gap-2 rounded-xl glass p-1.5 sm:min-w-0 sm:flex-wrap">
+            <TabBtn active={tab === "users"} onClick={() => setTab("users")} icon={<Users className="h-4 w-4" />}>Users</TabBtn>
+            <TabBtn active={tab === "deposits"} onClick={() => setTab("deposits")} icon={<ArrowDownToLine className="h-4 w-4" />}>Deposits</TabBtn>
+            <TabBtn active={tab === "withdrawals"} onClick={() => setTab("withdrawals")} icon={<ArrowUpFromLine className="h-4 w-4" />}>Withdrawals</TabBtn>
+            <TabBtn active={tab === "chats"} onClick={() => setTab("chats")} icon={<MessageSquare className="h-4 w-4" />}>Chats</TabBtn>
+          </div>
         </div>
 
         {tab === "users" && <UsersTab />}
@@ -452,7 +454,7 @@ function ChatsTab() {
 
   return (
     <div className="grid gap-4 md:grid-cols-[280px_1fr] md:h-[600px]">
-      <div className="overflow-hidden rounded-2xl glass md:overflow-y-auto">
+      <div className={`overflow-hidden rounded-2xl glass md:overflow-y-auto ${activeUserId ? "hidden md:block" : ""}`}>
         {threads.length === 0 ? (
           <p className="p-6 text-center text-sm text-muted-foreground">No conversations yet.</p>
         ) : (
@@ -475,13 +477,17 @@ function ChatsTab() {
           </ul>
         )}
       </div>
-      <div className="flex flex-col overflow-hidden rounded-2xl glass">
+      <div className={`flex h-[70vh] flex-col overflow-hidden rounded-2xl glass md:h-auto ${!activeUserId ? "hidden md:flex" : ""}`}>
         {!activeUserId ? (
           <div className="flex flex-1 items-center justify-center p-10 text-center text-sm text-muted-foreground">
             Select a conversation to view messages.
           </div>
         ) : (
           <>
+            <div className="flex items-center gap-2 border-b border-white/10 px-3 py-2 md:hidden">
+              <button onClick={() => setActiveUserId(null)} className="rounded-md border border-white/10 px-2 py-1 text-xs hover:bg-white/5">← Back</button>
+              <span className="truncate text-sm font-medium">{threads.find((t) => t.user_id === activeUserId)?.full_name || threads.find((t) => t.user_id === activeUserId)?.email}</span>
+            </div>
             <div ref={scrollRef} className="flex-1 space-y-2 overflow-y-auto p-4">
               {messages.map((m) => (
                 <div key={m.id} className={`flex ${m.sender === "admin" ? "justify-end" : "justify-start"}`}>
