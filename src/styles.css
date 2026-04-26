@@ -156,29 +156,39 @@
 }
 
 @layer components {
-  /* Glassmorphism card */
+  /* Glassmorphism card — darker, more solid for readability while keeping
+     a premium translucent feel. Uses the deep navy background tint so text
+     contrast stays high across the app. */
   .glass {
     background: linear-gradient(
       135deg,
-      oklch(1 0 0 / 0.06),
-      oklch(1 0 0 / 0.02)
+      color-mix(in oklab, var(--background) 78%, transparent),
+      color-mix(in oklab, var(--background) 88%, transparent)
     );
-    backdrop-filter: blur(16px) saturate(140%);
-    -webkit-backdrop-filter: blur(16px) saturate(140%);
-    border: 1px solid oklch(1 0 0 / 0.10);
+    backdrop-filter: blur(8px) saturate(130%);
+    -webkit-backdrop-filter: blur(8px) saturate(130%);
+    border: 1px solid oklch(1 0 0 / 0.12);
     border-radius: var(--radius-2xl);
+    box-shadow:
+      0 1px 0 oklch(1 0 0 / 0.06) inset,
+      0 8px 24px -12px oklch(0 0 0 / 0.55);
+    color: var(--foreground);
   }
 
   .glass-strong {
     background: linear-gradient(
       135deg,
-      oklch(1 0 0 / 0.10),
-      oklch(1 0 0 / 0.04)
+      color-mix(in oklab, var(--background) 88%, transparent),
+      color-mix(in oklab, var(--background) 95%, transparent)
     );
-    backdrop-filter: blur(24px) saturate(160%);
-    -webkit-backdrop-filter: blur(24px) saturate(160%);
-    border: 1px solid oklch(1 0 0 / 0.14);
+    backdrop-filter: blur(10px) saturate(140%);
+    -webkit-backdrop-filter: blur(10px) saturate(140%);
+    border: 1px solid oklch(1 0 0 / 0.16);
     border-radius: var(--radius-2xl);
+    box-shadow:
+      0 1px 0 oklch(1 0 0 / 0.08) inset,
+      0 12px 32px -16px oklch(0 0 0 / 0.65);
+    color: var(--foreground);
   }
 
   /* Mesh gradient backdrop — animated */
