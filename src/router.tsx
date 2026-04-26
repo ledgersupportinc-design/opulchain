@@ -1,8 +1,29 @@
+import { useEffect } from "react";
 import { createRouter, useRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
 
 function DefaultErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   const router = useRouter();
+
+  // Auto-recover from transient HMR / chunk-load errors that show up after
+  // Vite re-optimizes deps in dev or after a deploy in prod. We reload once,
+  // tracked via sessionStorage so we don't loop.
+  useEffect(() => {
+    const msg = String(error?.message ?? "");
+    const isTransient =
+      msg.includes("useContext") ||
+      msg.includes("dynamically imported module") ||
+      msg.includes("Failed to fetch") ||
+      msg.includes("Loading chunk") ||
+      msg.includes("Importing a module script failed");
+    if (!isTransient) return;
+    if (typeof window === "undefined") return;
+    const key = "opul:auto-reload";
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, "1");
+    window.location.reload();
+  }, [error]);
+
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
