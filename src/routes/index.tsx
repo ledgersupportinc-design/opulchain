@@ -38,7 +38,7 @@ function Landing() {
               <span className="text-gradient-blue">Grow Faster.</span>
             </h1>
             <p className="mx-auto mt-5 max-w-xl text-base text-muted-foreground sm:mt-6 sm:text-lg">
-              Buy, hold, and grow Bitcoin and USDT in one secure platform built for serious investors.
+              Buy, hold, and grow Bitcoin and USDT in one secure platform built for focused investors.
             </p>
             <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:mt-10 sm:flex-row sm:items-center">
               <Link to="/signup" className="inline-flex h-12 items-center justify-center gap-2 rounded-xl btn-primary px-8 text-base font-semibold">
@@ -85,7 +85,7 @@ function Landing() {
           <FeatureCard
             icon={<Zap className="h-6 w-6" />}
             title="Instant Deposits"
-            desc="Submit a deposit and we credit your account fast — typically within 24 hours after manual review."
+            desc="Submit a deposit and we credit your account fast — typically within 2 mins after manual review."
           />
           <FeatureCard
             icon={<TrendingUp className="h-6 w-6" />}
