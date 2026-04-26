@@ -122,16 +122,16 @@ function Dashboard() {
           </section>
 
           {/* Action buttons */}
-          <section className="mt-6 flex flex-wrap gap-3">
+          <section className="mt-6 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap">
             <button
               onClick={() => setModal("deposit")}
-              className="inline-flex h-12 items-center gap-2 rounded-xl bg-success px-6 text-sm font-semibold text-success-foreground shadow-[0_8px_24px_-8px_oklch(0.70_0.18_155_/_0.55)] transition hover:-translate-y-0.5 hover:brightness-110"
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-success px-6 text-sm font-semibold text-success-foreground shadow-[0_8px_24px_-8px_oklch(0.70_0.18_155_/_0.55)] transition hover:-translate-y-0.5 hover:brightness-110"
             >
               <ArrowDownToLine className="h-4 w-4" /> Deposit
             </button>
             <button
               onClick={() => setModal("withdrawal")}
-              className="inline-flex h-12 items-center gap-2 rounded-xl bg-destructive px-6 text-sm font-semibold text-destructive-foreground shadow-[0_8px_24px_-8px_oklch(0.62_0.22_22_/_0.55)] transition hover:-translate-y-0.5 hover:brightness-110"
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-destructive px-6 text-sm font-semibold text-destructive-foreground shadow-[0_8px_24px_-8px_oklch(0.62_0.22_22_/_0.55)] transition hover:-translate-y-0.5 hover:brightness-110"
             >
               <ArrowUpFromLine className="h-4 w-4" /> Withdraw
             </button>
