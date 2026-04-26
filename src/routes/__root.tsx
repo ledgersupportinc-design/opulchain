@@ -3,6 +3,7 @@ import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/r
 import appCss from "../styles.css?url";
 import { AuthProvider } from "@/lib/auth";
 import { ChatWidget } from "@/components/ChatWidget";
+import { AnnouncementBanner } from "@/components/AnnouncementBanner";
 import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
@@ -74,6 +75,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   return (
     <AuthProvider>
+      <AnnouncementBanner />
       <Outlet />
       <ChatWidget />
       <Toaster />

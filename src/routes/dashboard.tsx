@@ -9,6 +9,8 @@ import { LiveActivityFeed } from "@/components/LiveActivityFeed";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCrypto, formatDate, formatUsd, toUsd } from "@/lib/format";
+import { useCryptoPrices } from "@/hooks/useCryptoPrices";
+import { TrendingUp, TrendingDown } from "lucide-react";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
@@ -77,7 +79,13 @@ function Dashboard() {
 
   const btc = wallet?.btc_balance ?? 0;
   const usdt = wallet?.usdt_balance ?? 0;
-  const total = toUsd(btc, "BTC") + toUsd(usdt, "USDT");
+  // Live prices for portfolio cards (with sane fallbacks to reference rates)
+  const { prices } = useCryptoPrices();
+  const btcPrice = prices?.BTC.usd;
+  const usdtPrice = prices?.USDT.usd ?? 1;
+  const btcUsd = btcPrice ? btc * btcPrice : toUsd(btc, "BTC");
+  const usdtUsd = usdtPrice ? usdt * usdtPrice : toUsd(usdt, "USDT");
+  const total = btcUsd + usdtUsd;
 
   const totalPages = Math.max(1, Math.ceil(txs.length / PAGE_SIZE));
   const pagedTxs = txs.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
@@ -111,14 +119,19 @@ function Dashboard() {
               name="Bitcoin"
               symbol="BTC"
               amount={btc}
-              usd={toUsd(btc, "BTC")}
+              usd={btcUsd}
+              price={btcPrice}
+              change={prices?.BTC.change24h}
             />
             <AssetCard
               icon={<UsdtLogo className="h-9 w-9" />}
               name="Tether"
               symbol="USDT"
               amount={usdt}
-              usd={toUsd(usdt, "USDT")}
+              usd={usdtUsd}
+              price={usdtPrice}
+              change={prices?.USDT.change24h}
+              stable
             />
           </section>
 
@@ -221,7 +234,13 @@ function Dashboard() {
   );
 }
 
-function AssetCard({ icon, name, symbol, amount, usd }: { icon: React.ReactNode; name: string; symbol: string; amount: number; usd: number }) {
+function AssetCard({
+  icon, name, symbol, amount, usd, price, change, stable,
+}: {
+  icon: React.ReactNode; name: string; symbol: string; amount: number; usd: number;
+  price?: number; change?: number; stable?: boolean;
+}) {
+  const positive = (change ?? 0) >= 0;
   return (
     <div className="rounded-2xl glass p-6 fade-in">
       <div className="mb-4 flex items-center justify-between">
@@ -232,6 +251,21 @@ function AssetCard({ icon, name, symbol, amount, usd }: { icon: React.ReactNode;
             <p className="text-xs text-muted-foreground">{symbol}</p>
           </div>
         </div>
+        {price !== undefined && (
+          <div className="text-right">
+            <p className="font-mono text-xs font-semibold">
+              ${price.toLocaleString("en-US", { maximumFractionDigits: symbol === "BTC" ? 0 : 2, minimumFractionDigits: symbol === "BTC" ? 0 : 2 })}
+            </p>
+            {stable ? (
+              <p className="text-[10px] text-success">● Stable</p>
+            ) : change !== undefined ? (
+              <p className={`inline-flex items-center gap-0.5 text-[10px] font-medium ${positive ? "text-success" : "text-destructive"}`}>
+                {positive ? <TrendingUp className="h-2.5 w-2.5" /> : <TrendingDown className="h-2.5 w-2.5" />}
+                {positive ? "+" : ""}{change.toFixed(2)}%
+              </p>
+            ) : null}
+          </div>
+        )}
       </div>
       <p className="font-display text-2xl font-bold font-mono">{formatCrypto(amount, symbol as "BTC" | "USDT")}</p>
       <p className="mt-1 text-sm text-muted-foreground">≈ {formatUsd(usd)}</p>
