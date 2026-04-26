@@ -43,6 +43,10 @@ export function TransactionModal({
   const [loadingAddrs, setLoadingAddrs] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  // Withdrawal-only: live wallet balances so we can block over-withdrawals
+  const [balances, setBalances] = useState<Record<Asset, number>>({ BTC: 0, USDT: 0 });
+  const [loadingBalances, setLoadingBalances] = useState(false);
+
   const reset = () => {
     setAsset("BTC");
     setAmount("");
@@ -76,6 +80,28 @@ export function TransactionModal({
       });
     return () => { cancelled = true; };
   }, [open, mode]);
+
+  // Load wallet balances when opening a withdrawal
+  useEffect(() => {
+    if (!open || mode !== "withdrawal" || !user) return;
+    let cancelled = false;
+    setLoadingBalances(true);
+    supabase
+      .from("wallets")
+      .select("btc_balance,usdt_balance")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled) return;
+        setBalances({
+          BTC: Number(data?.btc_balance ?? 0),
+          USDT: Number(data?.usdt_balance ?? 0),
+        });
+        setLoadingBalances(false);
+      });
+    return () => { cancelled = true; };
+  }, [open, mode, user]);
+
 
   const isDeposit = mode === "deposit";
   const currentAdminAddr = adminAddresses[asset];
