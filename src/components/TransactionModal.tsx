@@ -373,13 +373,33 @@ export function TransactionModal({
               </div>
 
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Amount ({asset})</label>
+                <div className="mb-1.5 flex items-center justify-between">
+                  <label className="block text-xs font-medium text-muted-foreground">Amount ({asset})</label>
+                  <button
+                    type="button"
+                    onClick={() => setAmount(String(available))}
+                    disabled={loadingBalances || available <= 0}
+                    className="text-xs font-medium text-primary hover:underline disabled:opacity-40 disabled:no-underline"
+                  >
+                    Max
+                  </button>
+                </div>
                 <input
-                  type="number" step="any" inputMode="decimal"
+                  type="number" step="any" min="0" inputMode="decimal"
                   value={amount} onChange={(e) => setAmount(e.target.value)}
                   placeholder="0.00"
-                  className="input-glow w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-base"
+                  className={`input-glow w-full rounded-lg border bg-white/5 px-3 py-2.5 text-base ${
+                    exceedsBalance ? "border-destructive/60" : "border-white/10"
+                  }`}
                 />
+                <div className="mt-1.5 flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">
+                    Available: <span className="font-mono text-foreground">{loadingBalances ? "…" : formatBal(available, asset)}</span>
+                  </span>
+                  {exceedsBalance && (
+                    <span className="font-medium text-destructive">Exceeds balance</span>
+                  )}
+                </div>
               </div>
 
               <div>
