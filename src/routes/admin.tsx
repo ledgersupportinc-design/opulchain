@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, useCallback, useRef } from "react";
-import { Loader2, Users, ArrowDownToLine, ArrowUpFromLine, MessageSquare, Pencil, Check, X, Send, ShieldAlert, Wallet as WalletIcon, Save } from "lucide-react";
+import { Loader2, Users, ArrowDownToLine, ArrowUpFromLine, MessageSquare, Pencil, Check, X, Send, ShieldAlert, Wallet as WalletIcon, Save, Megaphone } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 import { Navbar } from "@/components/Navbar";
@@ -22,7 +22,7 @@ export const Route = createFileRoute("/admin")({
   component: AdminPage,
 });
 
-type Tab = "users" | "deposits" | "withdrawals" | "chats" | "wallets";
+type Tab = "users" | "deposits" | "withdrawals" | "chats" | "wallets" | "announcements";
 
 interface UserRow {
   id: string; email: string; full_name: string | null; created_at: string;
@@ -86,6 +86,7 @@ function AdminPage() {
             <TabBtn active={tab === "withdrawals"} onClick={() => setTab("withdrawals")} icon={<ArrowUpFromLine className="h-4 w-4" />}>Withdrawals</TabBtn>
             <TabBtn active={tab === "chats"} onClick={() => setTab("chats")} icon={<MessageSquare className="h-4 w-4" />}>Live Support</TabBtn>
             <TabBtn active={tab === "wallets"} onClick={() => setTab("wallets")} icon={<WalletIcon className="h-4 w-4" />}>Wallet Settings</TabBtn>
+            <TabBtn active={tab === "announcements"} onClick={() => setTab("announcements")} icon={<Megaphone className="h-4 w-4" />}>Announcements</TabBtn>
           </div>
         </div>
 
@@ -94,6 +95,7 @@ function AdminPage() {
         {tab === "withdrawals" && <TxTab type="withdrawal" />}
         {tab === "chats" && <ChatsTab />}
         {tab === "wallets" && <WalletsTab />}
+        {tab === "announcements" && <AnnouncementsTab />}
       </main>
     </div>
   );
