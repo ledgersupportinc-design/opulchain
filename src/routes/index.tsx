@@ -30,7 +30,7 @@ function Landing() {
           <div className="mx-auto max-w-3xl text-center fade-in">
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] text-muted-foreground backdrop-blur sm:px-4 sm:text-xs">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-success" />
-              Secure custody · Manual review · Real humans
+              Secure custody  · 24/7 Support Access
             </div>
             <h1 className="font-display text-4xl font-bold leading-[1.05] tracking-tight sm:text-5xl md:text-7xl">
               Invest Smarter.
