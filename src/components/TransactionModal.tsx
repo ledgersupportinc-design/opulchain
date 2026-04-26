@@ -155,6 +155,13 @@ export function TransactionModal({
     const parsed = withdrawSchema.safeParse({ amount: amt, wallet_address: walletAddress });
     if (!parsed.success) { toast.error(parsed.error.issues[0].message); return; }
 
+    // Block over-withdrawal client-side
+    const available = balances[asset];
+    if (amt > available) {
+      toast.error(`Insufficient ${asset} balance. Available: ${formatBal(available, asset)}`);
+      return;
+    }
+
     setSubmitting(true);
     const { error } = await supabase.from("transactions").insert({
       user_id: user.id,
@@ -175,6 +182,16 @@ export function TransactionModal({
     if (!n || Number.isNaN(n)) return "—";
     return asset === "BTC" ? `${n} BTC` : `${n.toLocaleString("en-US")} USDT`;
   }, [amount, asset]);
+
+  // Withdrawal balance helpers
+  const available = balances[asset];
+  const numericAmount = Number(amount);
+  const exceedsBalance =
+    !isDeposit &&
+    !loadingBalances &&
+    amount !== "" &&
+    Number.isFinite(numericAmount) &&
+    numericAmount > available;
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
