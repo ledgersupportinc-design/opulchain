@@ -321,9 +321,10 @@ function ActionModal({ tx, mode, type, onClose }: { tx: TxRow; mode: "approve" |
           setSaving(false);
           return;
         }
-        await supabase.from("wallets").update({ [balCol]: newBal }).eq("user_id", tx.user_id);
+        const walletUpdate = balCol === "btc_balance" ? { btc_balance: newBal } : { usdt_balance: newBal };
+        await supabase.from("wallets").update(walletUpdate).eq("user_id", tx.user_id);
       }
-      const update: Record<string, unknown> = { status: newStatus, admin_note: note || null };
+      const update: { status: "completed"; admin_note: string | null; amount?: number } = { status: newStatus, admin_note: note || null };
       if (type === "deposit") update.amount = Number(amount);
       const { error } = await supabase.from("transactions").update(update).eq("id", tx.id);
       if (error) { toast.error(error.message); setSaving(false); return; }
