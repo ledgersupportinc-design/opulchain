@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, useCallback, useRef } from "react";
-import { Loader2, Users, ArrowDownToLine, ArrowUpFromLine, MessageSquare, Pencil, Check, X, Send, ShieldAlert } from "lucide-react";
+import { Loader2, Users, ArrowDownToLine, ArrowUpFromLine, MessageSquare, Pencil, Check, X, Send, ShieldAlert, Wallet as WalletIcon, Save } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 import { Navbar } from "@/components/Navbar";
 import { BtcLogo, UsdtLogo } from "@/components/CryptoLogos";
@@ -21,7 +22,7 @@ export const Route = createFileRoute("/admin")({
   component: AdminPage,
 });
 
-type Tab = "users" | "deposits" | "withdrawals" | "chats";
+type Tab = "users" | "deposits" | "withdrawals" | "chats" | "wallets";
 
 interface UserRow {
   id: string; email: string; full_name: string | null; created_at: string;
@@ -83,7 +84,8 @@ function AdminPage() {
             <TabBtn active={tab === "users"} onClick={() => setTab("users")} icon={<Users className="h-4 w-4" />}>Users</TabBtn>
             <TabBtn active={tab === "deposits"} onClick={() => setTab("deposits")} icon={<ArrowDownToLine className="h-4 w-4" />}>Deposits</TabBtn>
             <TabBtn active={tab === "withdrawals"} onClick={() => setTab("withdrawals")} icon={<ArrowUpFromLine className="h-4 w-4" />}>Withdrawals</TabBtn>
-            <TabBtn active={tab === "chats"} onClick={() => setTab("chats")} icon={<MessageSquare className="h-4 w-4" />}>Chats</TabBtn>
+            <TabBtn active={tab === "chats"} onClick={() => setTab("chats")} icon={<MessageSquare className="h-4 w-4" />}>Live Support</TabBtn>
+            <TabBtn active={tab === "wallets"} onClick={() => setTab("wallets")} icon={<WalletIcon className="h-4 w-4" />}>Wallet Settings</TabBtn>
           </div>
         </div>
 
@@ -91,6 +93,7 @@ function AdminPage() {
         {tab === "deposits" && <TxTab type="deposit" />}
         {tab === "withdrawals" && <TxTab type="withdrawal" />}
         {tab === "chats" && <ChatsTab />}
+        {tab === "wallets" && <WalletsTab />}
       </main>
     </div>
   );
