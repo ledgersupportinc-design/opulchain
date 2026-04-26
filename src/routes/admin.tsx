@@ -628,3 +628,135 @@ function WalletField({
   );
 }
 
+
+// ============ ANNOUNCEMENTS TAB ============
+interface AnnouncementRow {
+  id: string;
+  message: string;
+  type: "info" | "warning" | "urgent";
+  active: boolean;
+  created_at: string;
+}
+
+function AnnouncementsTab() {
+  const [message, setMessage] = useState("");
+  const [type, setType] = useState<"info" | "warning" | "urgent">("info");
+  const [active, setActive] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [items, setItems] = useState<AnnouncementRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const { data } = await supabase
+      .from("announcements")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(20);
+    setItems((data as AnnouncementRow[]) ?? []);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const save = async () => {
+    if (!message.trim()) { toast.error("Message required"); return; }
+    setSaving(true);
+    // Deactivate any other active rows so only one is active
+    if (active) {
+      await supabase.from("announcements").update({ active: false }).eq("active", true);
+    }
+    const { error } = await supabase.from("announcements").insert({
+      message: message.trim(), type, active,
+    });
+    setSaving(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success(active ? "Announcement published" : "Announcement saved (inactive)");
+    setMessage("");
+    load();
+  };
+
+  const toggle = async (row: AnnouncementRow) => {
+    if (!row.active) {
+      // Deactivate others first
+      await supabase.from("announcements").update({ active: false }).eq("active", true);
+    }
+    await supabase.from("announcements").update({ active: !row.active }).eq("id", row.id);
+    load();
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="rounded-2xl glass p-5 sm:p-6">
+        <h3 className="font-semibold">New Announcement</h3>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Pinned below the navbar on every page. Only one is active at a time. All users get an in-app notification when activated.
+        </p>
+        <div className="mt-4 space-y-3">
+          <textarea
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder="Scheduled maintenance on Saturday from 02:00–04:00 UTC."
+            rows={3}
+            maxLength={300}
+            className="input-glow w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm"
+          />
+          <div className="grid gap-3 sm:grid-cols-[1fr_auto_auto] sm:items-center">
+            <div>
+              <label className="mb-1 block text-[11px] font-medium text-muted-foreground">Type</label>
+              <select
+                value={type}
+                onChange={(e) => setType(e.target.value as "info" | "warning" | "urgent")}
+                className="input-glow w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm"
+              >
+                <option value="info">Info (blue)</option>
+                <option value="warning">Warning (gold)</option>
+                <option value="urgent">Urgent (red)</option>
+              </select>
+            </div>
+            <label className="inline-flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} />
+              Active
+            </label>
+            <Button variant="hero" onClick={save} disabled={saving}>
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Publish"}
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <div className="overflow-hidden rounded-2xl glass">
+        <div className="border-b border-white/10 px-5 py-3 text-sm font-semibold">Recent Announcements</div>
+        {loading ? (
+          <div className="flex items-center justify-center py-10"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
+        ) : items.length === 0 ? (
+          <p className="px-5 py-10 text-center text-sm text-muted-foreground">No announcements yet.</p>
+        ) : (
+          <ul className="divide-y divide-white/5">
+            {items.map((row) => (
+              <li key={row.id} className="flex items-start gap-3 px-5 py-3">
+                <span className={`mt-1 inline-flex shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ring-1 ${
+                  row.type === "urgent" ? "bg-destructive/15 text-destructive ring-destructive/30"
+                  : row.type === "warning" ? "bg-gold/15 text-gold ring-gold/30"
+                  : "bg-primary/15 text-primary ring-primary/30"
+                }`}>{row.type}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm">{row.message}</p>
+                  <p className="text-[10px] text-muted-foreground">{formatDate(row.created_at)}</p>
+                </div>
+                <button
+                  onClick={() => toggle(row)}
+                  className={`shrink-0 rounded-md border px-2 py-1 text-[11px] font-medium ${
+                    row.active ? "border-success/30 bg-success/10 text-success" : "border-white/10 bg-white/5 text-muted-foreground hover:bg-white/10"
+                  }`}
+                >
+                  {row.active ? "Active" : "Inactive"}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
