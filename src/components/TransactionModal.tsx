@@ -8,6 +8,7 @@ import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { BtcLogo, UsdtLogo } from "./CryptoLogos";
+import { sendEmail } from "@/lib/sendEmail";
 
 type Asset = "BTC" | "USDT";
 type Mode = "deposit" | "withdrawal";
@@ -151,6 +152,11 @@ export function TransactionModal({
     });
     setSubmitting(false);
     if (error) { toast.error(error.message); return; }
+    // Fire deposit submitted email (non-blocking)
+    if (user.email) {
+      const firstName = (user.user_metadata as { full_name?: string } | undefined)?.full_name;
+      void sendEmail(user.email, "deposit_submitted", { firstName, amount: amt, asset });
+    }
     setDepositStep("submitted");
     toast.success("Deposit submitted");
   };
@@ -180,6 +186,13 @@ export function TransactionModal({
     });
     setSubmitting(false);
     if (error) { toast.error(error.message); return; }
+    // Fire withdrawal submitted email (non-blocking)
+    if (user.email) {
+      const firstName = (user.user_metadata as { full_name?: string } | undefined)?.full_name;
+      void sendEmail(user.email, "withdrawal_submitted", {
+        firstName, amount: amt, asset, walletAddress: walletAddress.trim(),
+      });
+    }
     setWithdrawSubmitted(true);
     toast.success("Withdrawal request submitted");
   };
