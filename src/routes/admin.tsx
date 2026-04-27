@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatCrypto, formatDate, formatUsd, toUsd } from "@/lib/format";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { sendEmail } from "@/lib/sendEmail";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -335,10 +336,28 @@ function ActionModal({ tx, mode, type, onClose }: { tx: TxRow; mode: "approve" |
       if (type === "deposit") update.amount = Number(amount);
       const { error } = await supabase.from("transactions").update(update).eq("id", tx.id);
       if (error) { toast.error(error.message); setSaving(false); return; }
+      // Fire approval email (non-blocking)
+      if (tx.email) {
+        const firstName = tx.full_name ?? undefined;
+        const tmpl = type === "deposit" ? "deposit_approved" : "withdrawal_approved";
+        void sendEmail(tx.email, tmpl, {
+          firstName,
+          amount: type === "deposit" ? Number(amount) : tx.amount,
+          asset: tx.asset,
+          walletAddress: tx.wallet_address ?? undefined,
+        });
+      }
       toast.success(type === "deposit" ? "Deposit approved & balance credited" : "Withdrawal marked complete");
     } else {
       const { error } = await supabase.from("transactions").update({ status: "rejected", admin_note: note || null }).eq("id", tx.id);
       if (error) { toast.error(error.message); setSaving(false); return; }
+      // Fire rejection email — only meaningful for withdrawals per requirements
+      if (type === "withdrawal" && tx.email) {
+        const firstName = tx.full_name ?? undefined;
+        void sendEmail(tx.email, "withdrawal_rejected", {
+          firstName, amount: tx.amount, asset: tx.asset, reason: note || undefined,
+        });
+      }
       toast.success("Marked as rejected");
     }
     setSaving(false);
