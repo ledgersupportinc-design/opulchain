@@ -47,7 +47,7 @@ function SignUp() {
       return;
     }
     setSubmitting(true);
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: parsed.data.email,
       password: parsed.data.password,
       options: {
@@ -62,6 +62,14 @@ function SignUp() {
     }
     // Fire welcome email (non-blocking)
     void sendEmail(parsed.data.email, "welcome", { firstName: parsed.data.fullName });
+
+    // If email confirmation is required, Supabase returns a user but no session.
+    if (!data.session) {
+      toast.success("Account created! Please check your email to verify your account before signing in.");
+      navigate({ to: "/login" });
+      return;
+    }
+
     toast.success("Account created! Welcome to OpulChain.");
     navigate({ to: "/dashboard" });
   };
