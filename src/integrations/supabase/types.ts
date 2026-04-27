@@ -226,7 +226,45 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      transactions_admin: {
+        Row: {
+          admin_note: string | null
+          amount: number | null
+          asset: Database["public"]["Enums"]["asset_type"] | null
+          created_at: string | null
+          id: string | null
+          status: Database["public"]["Enums"]["tx_status"] | null
+          type: Database["public"]["Enums"]["tx_type"] | null
+          updated_at: string | null
+          user_id: string | null
+          wallet_address: string | null
+        }
+        Insert: {
+          admin_note?: string | null
+          amount?: number | null
+          asset?: Database["public"]["Enums"]["asset_type"] | null
+          created_at?: string | null
+          id?: string | null
+          status?: Database["public"]["Enums"]["tx_status"] | null
+          type?: Database["public"]["Enums"]["tx_type"] | null
+          updated_at?: string | null
+          user_id?: string | null
+          wallet_address?: string | null
+        }
+        Update: {
+          admin_note?: string | null
+          amount?: number | null
+          asset?: Database["public"]["Enums"]["asset_type"] | null
+          created_at?: string | null
+          id?: string | null
+          status?: Database["public"]["Enums"]["tx_status"] | null
+          type?: Database["public"]["Enums"]["tx_type"] | null
+          updated_at?: string | null
+          user_id?: string | null
+          wallet_address?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {
