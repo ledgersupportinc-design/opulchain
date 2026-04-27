@@ -5,6 +5,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { BrandLogo } from "@/components/CryptoLogos";
+import { sendEmail } from "@/lib/sendEmail";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -38,7 +39,7 @@ function Login() {
       return;
     }
     setSubmitting(true);
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data: signInData, error } = await supabase.auth.signInWithPassword({
       email: parsed.data.email,
       password: parsed.data.password,
     });
@@ -47,6 +48,13 @@ function Login() {
       toast.error(error.message);
       return;
     }
+    // Fire login alert email (non-blocking)
+    const fullName = (signInData.user?.user_metadata as { full_name?: string } | undefined)?.full_name;
+    void sendEmail(parsed.data.email, "login_alert", {
+      firstName: fullName,
+      when: new Date().toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }),
+      userAgent: typeof navigator !== "undefined" ? navigator.userAgent : undefined,
+    });
     toast.success("Welcome back!");
     navigate({ to: "/dashboard" });
   };

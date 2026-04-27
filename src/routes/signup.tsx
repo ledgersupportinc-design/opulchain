@@ -5,6 +5,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { BrandLogo } from "@/components/CryptoLogos";
+import { sendEmail } from "@/lib/sendEmail";
 
 export const Route = createFileRoute("/signup")({
   head: () => ({
@@ -59,6 +60,8 @@ function SignUp() {
       toast.error(error.message);
       return;
     }
+    // Fire welcome email (non-blocking)
+    void sendEmail(parsed.data.email, "welcome", { firstName: parsed.data.fullName });
     toast.success("Account created! Welcome to OpulChain.");
     navigate({ to: "/dashboard" });
   };
