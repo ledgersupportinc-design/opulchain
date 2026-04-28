@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
 import {
-  Loader2, ShieldCheck, ShieldAlert, ShieldX, Check, X, ArrowLeft,
+  Loader2, ShieldCheck, ShieldX, Check, X, ArrowLeft,
   Users, ArrowDownToLine, ArrowUpFromLine, Wallet as WalletIcon, Megaphone, MessageSquare, RefreshCw,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
@@ -315,6 +315,3 @@ function SummaryCard({
     </div>
   );
 }
-
-// Suppress unused-import warning in cases where some lucide icons are only used conditionally.
-export const _icons = { ShieldAlert };
