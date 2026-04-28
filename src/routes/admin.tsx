@@ -1,6 +1,6 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, useCallback, useRef } from "react";
-import { Loader2, Users, ArrowDownToLine, ArrowUpFromLine, MessageSquare, Pencil, Check, X, Send, ShieldAlert, Wallet as WalletIcon, Save, Megaphone } from "lucide-react";
+import { Loader2, Users, ArrowDownToLine, ArrowUpFromLine, MessageSquare, Pencil, Check, X, Send, ShieldAlert, ShieldCheck, Wallet as WalletIcon, Save, Megaphone } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 import { Navbar } from "@/components/Navbar";
@@ -72,12 +72,20 @@ function AdminPage() {
       <Navbar />
       <div className="mesh-bg opacity-40" />
       <main className="relative z-10 mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
-        <header className="mb-6 sm:mb-8">
-          <div className="inline-flex items-center gap-2 rounded-full bg-gold/15 px-3 py-1 text-xs font-medium text-gold ring-1 ring-gold/30">
-            <ShieldAlert className="h-3 w-3" /> Admin Panel
+        <header className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full bg-gold/15 px-3 py-1 text-xs font-medium text-gold ring-1 ring-gold/30">
+              <ShieldAlert className="h-3 w-3" /> Admin Panel
+            </div>
+            <h1 className="mt-3 font-display text-2xl font-bold sm:text-3xl md:text-4xl">Operations Console</h1>
+            <p className="mt-1 text-sm text-muted-foreground">Manage users, approve transactions, reply to chats.</p>
           </div>
-          <h1 className="mt-3 font-display text-2xl font-bold sm:text-3xl md:text-4xl">Operations Console</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Manage users, approve transactions, reply to chats.</p>
+          <Link
+            to="/admin/permissions"
+            className="inline-flex items-center gap-2 self-start rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-foreground hover:bg-white/10"
+          >
+            <ShieldCheck className="h-4 w-4 text-gold" /> Verify permissions
+          </Link>
         </header>
 
         <div className="mb-6 -mx-4 overflow-x-auto px-4 sm:mx-0 sm:overflow-visible sm:px-0">
