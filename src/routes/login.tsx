@@ -55,8 +55,18 @@ function Login() {
       when: new Date().toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }),
       userAgent: typeof navigator !== "undefined" ? navigator.userAgent : undefined,
     });
-    toast.success("Welcome back!");
-    navigate({ to: "/dashboard" });
+
+    // Role-based redirect: admins → /admin, everyone else → /dashboard
+    let isAdmin = false;
+    if (signInData.user) {
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", signInData.user.id);
+      isAdmin = !!roles?.some((r) => r.role === "admin");
+    }
+    toast.success(isAdmin ? "Welcome back, admin!" : "Welcome back!");
+    navigate({ to: isAdmin ? "/admin" : "/dashboard" });
   };
 
   return (
