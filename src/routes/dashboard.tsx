@@ -32,7 +32,7 @@ interface Tx {
 const PAGE_SIZE = 8;
 
 function Dashboard() {
-  const { user, loading } = useAuth();
+  const { user, loading, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [wallet, setWallet] = useState<Wallet | null>(null);
   const [txs, setTxs] = useState<Tx[]>([]);
@@ -41,8 +41,10 @@ function Dashboard() {
   const [fetching, setFetching] = useState(true);
 
   useEffect(() => {
-    if (!loading && !user) navigate({ to: "/login" });
-  }, [loading, user, navigate]);
+    if (loading) return;
+    if (!user) navigate({ to: "/login" });
+    else if (isAdmin) navigate({ to: "/admin" });
+  }, [loading, user, isAdmin, navigate]);
 
   const load = useCallback(async () => {
     if (!user) return;
