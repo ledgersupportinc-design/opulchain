@@ -3,6 +3,18 @@ import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
 type Role = "admin" | "user";
+type QueryResult<T> = { data: T | null; error: { code?: string; message?: string } | null };
+
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function withSchemaRetry<T>(query: () => Promise<QueryResult<T>>, attempts = 4) {
+  let result = await query();
+  for (let i = 1; result.error?.code === "PGRST002" && i < attempts; i += 1) {
+    await wait(350 * i);
+    result = await query();
+  }
+  return result;
+}
 
 interface AuthContextValue {
   session: Session | null;
@@ -27,10 +39,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setRole(null);
       return;
     }
-    const { data } = await supabase
+    const { data: appUser, error: appUserError } = await withSchemaRetry(() => supabase
+      .from("users")
+      .select("id")
+      .eq("id", userId)
+      .maybeSingle());
+    if (appUserError || !appUser) {
+      setRole(null);
+      return;
+    }
+
+    const { data } = await withSchemaRetry(() => supabase
       .from("user_roles")
       .select("role")
-      .eq("user_id", userId);
+      .eq("user_id", userId));
     if (data && data.some((r) => r.role === "admin")) {
       setRole("admin");
     } else if (data && data.length > 0) {
