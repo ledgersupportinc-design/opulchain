@@ -1,4 +1,5 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { PermissionsModal } from "@/components/PermissionsModal";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { Loader2, Users, ArrowDownToLine, ArrowUpFromLine, MessageSquare, Pencil, Check, X, Send, ShieldAlert, ShieldCheck, Wallet as WalletIcon, Save, Megaphone } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
@@ -46,6 +47,7 @@ function AdminPage() {
   const { user, isAdmin, loading } = useAuth();
   const navigate = useNavigate();
   const [tab, setTab] = useState<Tab>("users");
+  const [permsOpen, setPermsOpen] = useState(false);
 
   useEffect(() => {
     if (loading) return;
@@ -80,13 +82,15 @@ function AdminPage() {
             <h1 className="mt-3 font-display text-2xl font-bold sm:text-3xl md:text-4xl">Operations Console</h1>
             <p className="mt-1 text-sm text-muted-foreground">Manage users, approve transactions, reply to chats.</p>
           </div>
-          <Link
-            to="/admin/permissions"
+          <button
+            type="button"
+            onClick={() => setPermsOpen(true)}
             className="inline-flex items-center gap-2 self-start rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-foreground hover:bg-white/10"
           >
             <ShieldCheck className="h-4 w-4 text-gold" /> Verify permissions
-          </Link>
+          </button>
         </header>
+        <PermissionsModal open={permsOpen} onClose={() => setPermsOpen(false)} />
 
         <div className="mb-6 -mx-4 overflow-x-auto px-4 sm:mx-0 sm:overflow-visible sm:px-0">
           <div className="flex min-w-max gap-2 rounded-xl glass p-1.5 sm:min-w-0 sm:flex-wrap">
