@@ -22,6 +22,18 @@ const schema = z.object({
   password: z.string().min(1, "Password required").max(128),
 });
 
+type QueryResult<T> = { data: T | null; error: { code?: string; message?: string } | null };
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function withSchemaRetry<T>(query: () => PromiseLike<QueryResult<T>>, attempts = 4) {
+  let result = await query();
+  for (let i = 1; result.error?.code === "PGRST002" && i < attempts; i += 1) {
+    await wait(350 * i);
+    result = await query();
+  }
+  return result;
+}
+
 function Login() {
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
@@ -59,10 +71,16 @@ function Login() {
     // Role-based redirect: admins → /admin, everyone else → /dashboard
     let isAdmin = false;
     if (signInData.user) {
-      const { data: roles } = await supabase
+      const { data: appUser } = await withSchemaRetry<{ id: string }>(() => supabase
+        .from("users")
+        .select("id")
+        .eq("id", signInData.user.id)
+        .maybeSingle());
+
+      const { data: roles } = appUser ? await withSchemaRetry<Array<{ role: "admin" | "user" }>>(() => supabase
         .from("user_roles")
         .select("role")
-        .eq("user_id", signInData.user.id);
+        .eq("user_id", signInData.user.id)) : { data: null };
       isAdmin = !!roles?.some((r) => r.role === "admin");
     }
     toast.success(isAdmin ? "Welcome back, admin!" : "Welcome back!");
