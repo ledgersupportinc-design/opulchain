@@ -7,7 +7,7 @@ type QueryResult<T> = { data: T | null; error: { code?: string; message?: string
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function withSchemaRetry<T>(query: () => Promise<QueryResult<T>>, attempts = 4) {
+async function withSchemaRetry<T>(query: () => PromiseLike<QueryResult<T>>, attempts = 4) {
   let result = await query();
   for (let i = 1; result.error?.code === "PGRST002" && i < attempts; i += 1) {
     await wait(350 * i);
@@ -39,7 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setRole(null);
       return;
     }
-    const { data: appUser, error: appUserError } = await withSchemaRetry(() => supabase
+    const { data: appUser, error: appUserError } = await withSchemaRetry<{ id: string }>(() => supabase
       .from("users")
       .select("id")
       .eq("id", userId)
@@ -49,7 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const { data } = await withSchemaRetry(() => supabase
+    const { data } = await withSchemaRetry<Array<{ role: Role }>>(() => supabase
       .from("user_roles")
       .select("role")
       .eq("user_id", userId));
