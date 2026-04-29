@@ -1,22 +1,11 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
 import {
-  Loader2, ShieldCheck, ShieldX, Check, X, ArrowLeft,
+  Loader2, ShieldCheck, ShieldX, Check, X,
   Users, ArrowDownToLine, ArrowUpFromLine, Wallet as WalletIcon, Megaphone, MessageSquare, RefreshCw,
 } from "lucide-react";
-import { Navbar } from "@/components/Navbar";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
-
-export const Route = createFileRoute("/admin/permissions")({
-  head: () => ({
-    meta: [
-      { title: "Admin Permissions — OpulChain" },
-      { name: "robots", content: "noindex" },
-    ],
-  }),
-  component: PermissionsPage,
-});
 
 type CheckStatus = "pending" | "ok" | "fail";
 
@@ -29,19 +18,11 @@ interface CapabilityCheck {
   detail?: string;
 }
 
-function PermissionsPage() {
-  const { user, isAdmin, loading, role } = useAuth();
-  const navigate = useNavigate();
+export function PermissionsModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { user, isAdmin, role } = useAuth();
   const [checks, setChecks] = useState<CapabilityCheck[]>(initialChecks());
   const [running, setRunning] = useState(false);
   const [lastRun, setLastRun] = useState<Date | null>(null);
-
-  // Route guard: same as /admin
-  useEffect(() => {
-    if (loading) return;
-    if (!user) navigate({ to: "/login" });
-    else if (!isAdmin) navigate({ to: "/dashboard" });
-  }, [user, isAdmin, loading, navigate]);
 
   const runChecks = useCallback(async () => {
     if (!user) return;
@@ -49,7 +30,6 @@ function PermissionsPage() {
 
     const results: Record<string, { status: CheckStatus; detail?: string }> = {};
 
-    // 1. View all user profiles (admin RLS bypass on profiles)
     {
       const { data, error, count } = await supabase
         .from("profiles")
@@ -58,8 +38,6 @@ function PermissionsPage() {
         ? { status: "fail", detail: error.message }
         : { status: "ok", detail: `${count ?? data?.length ?? 0} profiles visible` };
     }
-
-    // 2. View all wallet balances
     {
       const { data, error, count } = await supabase
         .from("wallets")
@@ -68,8 +46,6 @@ function PermissionsPage() {
         ? { status: "fail", detail: error.message }
         : { status: "ok", detail: `${count ?? data?.length ?? 0} wallets visible` };
     }
-
-    // 3. View all transactions (deposits + withdrawals)
     {
       const { count: depositCount, error: depErr } = await supabase
         .from("transactions").select("id", { count: "exact", head: true }).eq("type", "deposit");
@@ -83,72 +59,47 @@ function PermissionsPage() {
         results.viewWithdrawals = { status: "ok", detail: `${wdCount ?? 0} withdrawal records visible` };
       }
     }
-
-    // 4. Approve/reject transactions — non-destructive probe via UPDATE on a non-existent id.
-    //    If RLS allows the UPDATE we get rowCount=0 and no error. If RLS blocks us we get an error.
     {
       const probeId = "00000000-0000-0000-0000-000000000000";
       const { error } = await supabase
-        .from("transactions")
-        .update({ admin_note: null })
-        .eq("id", probeId);
+        .from("transactions").update({ admin_note: null }).eq("id", probeId);
       results.approveTx = error
         ? { status: "fail", detail: error.message }
         : { status: "ok", detail: "Update policy permits admin write" };
     }
-
-    // 5. Edit user balances (wallets table) — same non-destructive probe.
     {
       const probeUser = "00000000-0000-0000-0000-000000000000";
       const { error } = await supabase
-        .from("wallets")
-        .update({ btc_balance: 0 })
-        .eq("user_id", probeUser);
+        .from("wallets").update({ btc_balance: 0 }).eq("user_id", probeUser);
       results.editBalances = error
         ? { status: "fail", detail: error.message }
         : { status: "ok", detail: "Update policy permits admin write" };
     }
-
-    // 6. Manage admin wallet addresses
     {
-      const { data, error } = await supabase
-        .from("admin_wallets")
-        .select("asset, address");
+      const { data, error } = await supabase.from("admin_wallets").select("asset, address");
       results.manageAdminWallets = error
         ? { status: "fail", detail: error.message }
         : { status: "ok", detail: `${data?.length ?? 0} deposit addresses configured` };
     }
-
-    // 7. Post announcements (probe via update against impossible id)
     {
       const probeId = "00000000-0000-0000-0000-000000000000";
       const { error } = await supabase
-        .from("announcements")
-        .update({ active: true })
-        .eq("id", probeId);
+        .from("announcements").update({ active: true }).eq("id", probeId);
       results.manageAnnouncements = error
         ? { status: "fail", detail: error.message }
         : { status: "ok", detail: "Insert/update policy permits admin write" };
     }
-
-    // 8. Reply to support chats
     {
       const { count, error } = await supabase
-        .from("chat_messages")
-        .select("id", { count: "exact", head: true });
+        .from("chat_messages").select("id", { count: "exact", head: true });
       results.supportChat = error
         ? { status: "fail", detail: error.message }
         : { status: "ok", detail: `${count ?? 0} messages visible across all threads` };
     }
-
-    // 9. Manage user roles (admin-only INSERT/UPDATE/DELETE)
     {
       const probeUser = "00000000-0000-0000-0000-000000000000";
       const { error } = await supabase
-        .from("user_roles")
-        .delete()
-        .eq("user_id", probeUser)
-        .eq("role", "admin");
+        .from("user_roles").delete().eq("user_id", probeUser).eq("role", "admin");
       results.manageRoles = error
         ? { status: "fail", detail: error.message }
         : { status: "ok", detail: "Delete policy permits admin write" };
@@ -166,73 +117,58 @@ function PermissionsPage() {
   }, [user]);
 
   useEffect(() => {
-    if (isAdmin && user) void runChecks();
-  }, [isAdmin, user, runChecks]);
+    if (open && isAdmin && user) void runChecks();
+  }, [open, isAdmin, user, runChecks]);
 
-  if (loading || !user) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
-      </div>
-    );
-  }
-  if (!isAdmin) return null;
+  if (!isAdmin || !user) return null;
 
   const passed = checks.filter((c) => c.status === "ok").length;
   const failed = checks.filter((c) => c.status === "fail").length;
   const total = checks.length;
 
   return (
-    <div className="relative min-h-screen">
-      <Navbar />
-      <div className="mesh-bg opacity-40" />
-      <main className="relative z-10 mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-10">
-        <Link to="/admin" className="mb-4 inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="h-3 w-3" /> Back to Admin Panel
-        </Link>
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto border-white/10 bg-card/95 backdrop-blur-xl sm:max-w-2xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <ShieldCheck className="h-5 w-5 text-gold" /> Admin Capability Verification
+          </DialogTitle>
+        </DialogHeader>
 
-        <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <div className="inline-flex items-center gap-2 rounded-full bg-gold/15 px-3 py-1 text-xs font-medium text-gold ring-1 ring-gold/30">
-              <ShieldCheck className="h-3 w-3" /> Permissions Audit
-            </div>
-            <h1 className="mt-3 font-display text-2xl font-bold sm:text-3xl">Admin Capability Verification</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Live probe of every admin power for <span className="font-medium text-foreground">{user.email}</span>.
+        <p className="text-sm text-muted-foreground">
+          Live probe of every admin power for <span className="font-medium text-foreground">{user.email}</span>.
+        </p>
+
+        <div className="grid gap-2 sm:grid-cols-3">
+          <SummaryCard label="Account role" value={role ?? "—"} accent="primary" icon={<ShieldCheck className="h-3 w-3" />} />
+          <SummaryCard label="Granted" value={`${passed}/${total}`} accent={passed === total ? "success" : "warn"} icon={<Check className="h-3 w-3" />} />
+          <SummaryCard label="Denied" value={`${failed}`} accent={failed === 0 ? "muted" : "danger"} icon={<X className="h-3 w-3" />} />
+        </div>
+
+        <div className="flex items-center justify-between">
+          {lastRun ? (
+            <p className="text-xs text-muted-foreground">
+              Last checked {lastRun.toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}
             </p>
-          </div>
+          ) : <span />}
           <button
             onClick={runChecks}
             disabled={running}
-            className="inline-flex items-center gap-2 self-start rounded-lg btn-primary px-4 py-2 text-sm font-semibold disabled:opacity-60"
+            className="inline-flex items-center gap-2 rounded-lg btn-primary px-3 py-1.5 text-xs font-semibold disabled:opacity-60"
           >
-            {running ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-            Re-run checks
+            {running ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+            Re-run
           </button>
-        </header>
-
-        {/* Summary */}
-        <div className="mb-6 grid gap-3 sm:grid-cols-3">
-          <SummaryCard label="Account role" value={role ?? "—"} accent="primary" icon={<ShieldCheck className="h-4 w-4" />} />
-          <SummaryCard label="Capabilities granted" value={`${passed}/${total}`} accent={passed === total ? "success" : "warn"} icon={<Check className="h-4 w-4" />} />
-          <SummaryCard label="Capabilities denied" value={`${failed}`} accent={failed === 0 ? "muted" : "danger"} icon={<X className="h-4 w-4" />} />
         </div>
 
-        {lastRun && (
-          <p className="mb-3 text-xs text-muted-foreground">
-            Last checked {lastRun.toLocaleString("en-US", { dateStyle: "medium", timeStyle: "medium" })}
-          </p>
-        )}
-
-        {/* Capabilities */}
-        <div className="overflow-hidden rounded-2xl glass">
+        <div className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.02]">
           <ul className="divide-y divide-white/5">
             {checks.map((c) => (
-              <li key={c.key} className="flex items-start gap-4 px-5 py-4">
+              <li key={c.key} className="flex items-start gap-3 px-4 py-3">
                 <div className="mt-0.5 text-muted-foreground">{c.icon}</div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <p className="font-medium">{c.label}</p>
+                    <p className="text-sm font-medium">{c.label}</p>
                     <StatusPill status={c.status} />
                   </div>
                   <p className="mt-0.5 text-xs text-muted-foreground">{c.description}</p>
@@ -247,12 +183,11 @@ function PermissionsPage() {
           </ul>
         </div>
 
-        <p className="mt-4 text-xs text-muted-foreground">
-          Write checks use a harmless probe (an impossible row id) so nothing is actually modified — they only confirm the
-          row-level security policy permits the action.
+        <p className="text-xs text-muted-foreground">
+          Write checks use a harmless probe (an impossible row id) so nothing is actually modified.
         </p>
-      </main>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -266,7 +201,7 @@ function initialChecks(): CapabilityCheck[] {
     { key: "approveTx", label: "Approve / reject transactions", description: "Update transaction status (approve, complete, reject).", icon: <Check className="h-4 w-4" />, status: "pending" },
     { key: "manageAdminWallets", label: "Manage deposit addresses", description: "Read & update the BTC / USDT addresses users send funds to.", icon: <WalletIcon className="h-4 w-4" />, status: "pending" },
     { key: "manageAnnouncements", label: "Post announcements", description: "Create or edit the platform-wide announcement banner.", icon: <Megaphone className="h-4 w-4" />, status: "pending" },
-    { key: "supportChat", label: "Reply to support chats", description: "Read every user’s chat thread and respond as OpulChain Support.", icon: <MessageSquare className="h-4 w-4" />, status: "pending" },
+    { key: "supportChat", label: "Reply to support chats", description: "Read every user's chat thread and respond as OpulChain Support.", icon: <MessageSquare className="h-4 w-4" />, status: "pending" },
     { key: "manageRoles", label: "Manage admin roles", description: "Grant or revoke the admin role on other accounts.", icon: <ShieldCheck className="h-4 w-4" />, status: "pending" },
   ];
 }
@@ -307,11 +242,11 @@ function SummaryCard({
     muted: "text-muted-foreground bg-white/5 ring-white/10",
   };
   return (
-    <div className="rounded-xl glass p-4">
-      <div className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-medium ring-1 ${accentMap[accent]}`}>
+    <div className="rounded-lg border border-white/10 bg-white/[0.02] p-3">
+      <div className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ring-1 ${accentMap[accent]}`}>
         {icon} {label}
       </div>
-      <p className="mt-2 font-display text-2xl font-bold capitalize">{value}</p>
+      <p className="mt-1.5 font-display text-lg font-bold capitalize">{value}</p>
     </div>
   );
 }
