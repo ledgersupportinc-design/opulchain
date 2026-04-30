@@ -46,7 +46,7 @@ interface ChatThread {
 function AdminPage() {
   const { user, isAdmin, loading } = useAuth();
   const navigate = useNavigate();
-  const [tab, setTab] = useState<Tab>("users");
+  const [tab, setTab] = useState<Tab>("overview");
   const [permsOpen, setPermsOpen] = useState(false);
 
   useEffect(() => {
