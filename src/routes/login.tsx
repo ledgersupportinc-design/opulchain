@@ -71,16 +71,10 @@ function Login() {
     // Role-based redirect: admins → /admin, everyone else → /dashboard
     let isAdmin = false;
     if (signInData.user) {
-      const { data: appUser } = await withSchemaRetry<{ id: string }>(() => supabase
-        .from("users")
-        .select("id")
-        .eq("id", signInData.user.id)
-        .maybeSingle());
-
-      const { data: roles } = appUser ? await withSchemaRetry<Array<{ role: "admin" | "user" }>>(() => supabase
+      const { data: roles } = await withSchemaRetry<Array<{ role: "admin" | "user" }>>(() => supabase
         .from("user_roles")
         .select("role")
-        .eq("user_id", signInData.user.id)) : { data: null };
+        .eq("user_id", signInData.user.id));
       isAdmin = !!roles?.some((r) => r.role === "admin");
     }
     toast.success(isAdmin ? "Welcome back, admin!" : "Welcome back!");

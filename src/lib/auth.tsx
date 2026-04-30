@@ -39,26 +39,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setRole(null);
       return;
     }
-    const { data: appUser, error: appUserError } = await withSchemaRetry<{ id: string }>(() => supabase
-      .from("users")
-      .select("id")
-      .eq("id", userId)
-      .maybeSingle());
-    if (appUserError || !appUser) {
-      setRole(null);
-      return;
-    }
-
     const { data } = await withSchemaRetry<Array<{ role: Role }>>(() => supabase
       .from("user_roles")
       .select("role")
       .eq("user_id", userId));
     if (data && data.some((r) => r.role === "admin")) {
       setRole("admin");
-    } else if (data && data.length > 0) {
-      setRole("user");
     } else {
-      setRole(null);
+      // Default to "user" if no rows (or transient error) so the app doesn't get stuck.
+      setRole("user");
     }
   };
 
