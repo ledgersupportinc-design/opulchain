@@ -24,7 +24,7 @@ export const Route = createFileRoute("/admin")({
   component: AdminPage,
 });
 
-type Tab = "users" | "deposits" | "withdrawals" | "chats" | "wallets" | "announcements";
+type Tab = "overview" | "users" | "deposits" | "withdrawals" | "chats" | "wallets" | "announcements";
 
 interface UserRow {
   id: string; email: string; full_name: string | null; created_at: string;
