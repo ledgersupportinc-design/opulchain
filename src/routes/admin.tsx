@@ -94,6 +94,7 @@ function AdminPage() {
 
         <div className="mb-6 -mx-4 overflow-x-auto px-4 sm:mx-0 sm:overflow-visible sm:px-0">
           <div className="flex min-w-max gap-2 rounded-xl glass p-1.5 sm:min-w-0 sm:flex-wrap">
+            <TabBtn active={tab === "overview"} onClick={() => setTab("overview")} icon={<LayoutDashboard className="h-4 w-4" />}>Overview</TabBtn>
             <TabBtn active={tab === "users"} onClick={() => setTab("users")} icon={<Users className="h-4 w-4" />}>Users</TabBtn>
             <TabBtn active={tab === "deposits"} onClick={() => setTab("deposits")} icon={<ArrowDownToLine className="h-4 w-4" />}>Deposits</TabBtn>
             <TabBtn active={tab === "withdrawals"} onClick={() => setTab("withdrawals")} icon={<ArrowUpFromLine className="h-4 w-4" />}>Withdrawals</TabBtn>
@@ -103,6 +104,7 @@ function AdminPage() {
           </div>
         </div>
 
+        {tab === "overview" && <OverviewTab onJump={setTab} />}
         {tab === "users" && <UsersTab />}
         {tab === "deposits" && <TxTab type="deposit" />}
         {tab === "withdrawals" && <TxTab type="withdrawal" />}
