@@ -127,6 +127,257 @@ function TabBtn({ active, onClick, icon, children }: { active: boolean; onClick:
   );
 }
 
+// ============ OVERVIEW TAB ============
+interface OverviewStats {
+  totalUsers: number;
+  newUsers7d: number;
+  pendingDeposits: number;
+  pendingWithdrawals: number;
+  completedDepositsUsd: number;
+  completedWithdrawalsUsd: number;
+  totalBtc: number;
+  totalUsdt: number;
+  unreadMessages: number;
+  recentTxs: TxRow[];
+  recentUsers: { id: string; email: string; full_name: string | null; created_at: string }[];
+}
+
+function OverviewTab({ onJump }: { onJump: (t: Tab) => void }) {
+  const [stats, setStats] = useState<OverviewStats | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const [profilesRes, walletsRes, txsRes, chatsRes] = await Promise.all([
+      supabase.from("profiles").select("id,email,full_name,created_at").order("created_at", { ascending: false }),
+      supabase.from("wallets").select("btc_balance,usdt_balance"),
+      supabase.from("transactions").select("*").order("created_at", { ascending: false }).limit(500),
+      supabase.from("chat_messages").select("id,sender,read").eq("sender", "user").eq("read", false),
+    ]);
+
+    const profiles = profilesRes.data ?? [];
+    const wallets = walletsRes.data ?? [];
+    const txs = (txsRes.data ?? []).map((t) => ({ ...t, amount: Number(t.amount) })) as TxRow[];
+    const profileMap = new Map(profiles.map((p) => [p.id, p]));
+
+    const totalUsers = profiles.length;
+    const newUsers7d = profiles.filter((p) => p.created_at >= sevenDaysAgo).length;
+    const pendingDeposits = txs.filter((t) => t.type === "deposit" && t.status === "pending").length;
+    const pendingWithdrawals = txs.filter((t) => t.type === "withdrawal" && t.status === "pending").length;
+    const completedDepositsUsd = txs
+      .filter((t) => t.type === "deposit" && t.status === "completed")
+      .reduce((sum, t) => sum + toUsd(t.amount, t.asset), 0);
+    const completedWithdrawalsUsd = txs
+      .filter((t) => t.type === "withdrawal" && t.status === "completed")
+      .reduce((sum, t) => sum + toUsd(t.amount, t.asset), 0);
+    const totalBtc = wallets.reduce((s, w) => s + Number(w.btc_balance ?? 0), 0);
+    const totalUsdt = wallets.reduce((s, w) => s + Number(w.usdt_balance ?? 0), 0);
+    const unreadMessages = chatsRes.data?.length ?? 0;
+    const recentTxs = txs.slice(0, 6).map((t) => {
+      const p = profileMap.get(t.user_id);
+      return { ...t, email: p?.email, full_name: p?.full_name ?? null };
+    });
+    const recentUsers = profiles.slice(0, 5);
+
+    setStats({
+      totalUsers, newUsers7d, pendingDeposits, pendingWithdrawals,
+      completedDepositsUsd, completedWithdrawalsUsd, totalBtc, totalUsdt,
+      unreadMessages, recentTxs, recentUsers,
+    });
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  // Realtime updates
+  useEffect(() => {
+    const ch = supabase
+      .channel("admin-overview")
+      .on("postgres_changes", { event: "*", schema: "public", table: "transactions" }, () => load())
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, () => load())
+      .on("postgres_changes", { event: "*", schema: "public", table: "chat_messages" }, () => load())
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [load]);
+
+  if (loading || !stats) return <Spinner />;
+
+  const totalCustodyUsd = toUsd(stats.totalBtc, "BTC") + toUsd(stats.totalUsdt, "USDT");
+  const netFlowUsd = stats.completedDepositsUsd - stats.completedWithdrawalsUsd;
+
+  return (
+    <div className="space-y-6">
+      {/* KPI cards */}
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <KpiCard
+          label="Total Users"
+          value={stats.totalUsers.toLocaleString()}
+          sub={`+${stats.newUsers7d} new this week`}
+          icon={<Users className="h-5 w-5" />}
+          tone="primary"
+          onClick={() => onJump("users")}
+        />
+        <KpiCard
+          label="Pending Deposits"
+          value={stats.pendingDeposits.toLocaleString()}
+          sub="Awaiting approval"
+          icon={<ArrowDownToLine className="h-5 w-5" />}
+          tone={stats.pendingDeposits > 0 ? "warning" : "muted"}
+          onClick={() => onJump("deposits")}
+        />
+        <KpiCard
+          label="Pending Withdrawals"
+          value={stats.pendingWithdrawals.toLocaleString()}
+          sub="Awaiting processing"
+          icon={<ArrowUpFromLine className="h-5 w-5" />}
+          tone={stats.pendingWithdrawals > 0 ? "warning" : "muted"}
+          onClick={() => onJump("withdrawals")}
+        />
+        <KpiCard
+          label="Unread Messages"
+          value={stats.unreadMessages.toLocaleString()}
+          sub="From customers"
+          icon={<MessageSquare className="h-5 w-5" />}
+          tone={stats.unreadMessages > 0 ? "destructive" : "muted"}
+          onClick={() => onJump("chats")}
+        />
+      </section>
+
+      {/* Volume + custody */}
+      <section className="grid gap-4 md:grid-cols-3">
+        <div className="rounded-2xl glass p-6">
+          <div className="mb-3 flex items-center justify-between">
+            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Total Custody (USD)</span>
+            <WalletIcon className="h-5 w-5 text-primary" />
+          </div>
+          <p className="font-display text-3xl font-bold">{formatUsd(totalCustodyUsd)}</p>
+          <div className="mt-3 grid grid-cols-2 gap-3 text-xs">
+            <div className="rounded-lg bg-white/5 p-2">
+              <div className="flex items-center gap-1.5 text-muted-foreground"><BtcLogo className="h-3.5 w-3.5" /> BTC</div>
+              <p className="mt-0.5 font-mono font-semibold">{formatCrypto(stats.totalBtc, "BTC")}</p>
+            </div>
+            <div className="rounded-lg bg-white/5 p-2">
+              <div className="flex items-center gap-1.5 text-muted-foreground"><UsdtLogo className="h-3.5 w-3.5" /> USDT</div>
+              <p className="mt-0.5 font-mono font-semibold">{formatCrypto(stats.totalUsdt, "USDT")}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-2xl glass p-6">
+          <div className="mb-3 flex items-center justify-between">
+            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Completed Volume</span>
+            <TrendingUp className="h-5 w-5 text-success" />
+          </div>
+          <div className="space-y-2">
+            <div>
+              <p className="text-xs text-muted-foreground">Deposits in</p>
+              <p className="font-display text-xl font-bold text-success">{formatUsd(stats.completedDepositsUsd)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Withdrawals out</p>
+              <p className="font-display text-xl font-bold text-warning">{formatUsd(stats.completedWithdrawalsUsd)}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-2xl glass p-6">
+          <div className="mb-3 flex items-center justify-between">
+            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Net Flow</span>
+            <Activity className="h-5 w-5 text-primary" />
+          </div>
+          <p className={`font-display text-3xl font-bold ${netFlowUsd >= 0 ? "text-success" : "text-destructive"}`}>
+            {netFlowUsd >= 0 ? "+" : ""}{formatUsd(netFlowUsd)}
+          </p>
+          <p className="mt-2 text-xs text-muted-foreground">Deposits minus withdrawals (all-time, completed)</p>
+        </div>
+      </section>
+
+      {/* Recent activity + new users */}
+      <section className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
+        <div className="overflow-hidden rounded-2xl glass">
+          <div className="flex items-center justify-between border-b border-white/10 px-5 py-3">
+            <h3 className="flex items-center gap-2 text-sm font-semibold"><Clock className="h-4 w-4 text-primary" /> Recent Transactions</h3>
+            <button onClick={() => onJump("deposits")} className="text-xs text-primary hover:underline">View all</button>
+          </div>
+          {stats.recentTxs.length === 0 ? (
+            <p className="px-5 py-10 text-center text-sm text-muted-foreground">No transactions yet.</p>
+          ) : (
+            <ul className="divide-y divide-white/5">
+              {stats.recentTxs.map((t) => (
+                <li key={t.id} className="flex items-center justify-between gap-3 px-5 py-3 text-sm">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className={`inline-flex items-center gap-1 text-xs font-medium ${t.type === "deposit" ? "text-success" : "text-warning"}`}>
+                        {t.type === "deposit" ? <ArrowDownToLine className="h-3 w-3" /> : <ArrowUpFromLine className="h-3 w-3" />}
+                        {t.type}
+                      </span>
+                      <span className="text-xs text-muted-foreground">·</span>
+                      <span className="truncate text-xs text-muted-foreground">{t.full_name || t.email || "—"}</span>
+                    </div>
+                    <p className="mt-0.5 text-[11px] text-muted-foreground">{formatDate(t.created_at)}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-mono text-xs font-semibold">{formatCrypto(t.amount, t.asset)} {t.asset}</p>
+                    <StatusBadge status={t.status} />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <div className="overflow-hidden rounded-2xl glass">
+          <div className="flex items-center justify-between border-b border-white/10 px-5 py-3">
+            <h3 className="flex items-center gap-2 text-sm font-semibold"><Users className="h-4 w-4 text-primary" /> New Users</h3>
+            <button onClick={() => onJump("users")} className="text-xs text-primary hover:underline">View all</button>
+          </div>
+          {stats.recentUsers.length === 0 ? (
+            <p className="px-5 py-10 text-center text-sm text-muted-foreground">No users yet.</p>
+          ) : (
+            <ul className="divide-y divide-white/5">
+              {stats.recentUsers.map((u) => (
+                <li key={u.id} className="px-5 py-3 text-sm">
+                  <p className="truncate font-medium">{u.full_name || "—"}</p>
+                  <p className="truncate text-xs text-muted-foreground">{u.email}</p>
+                  <p className="mt-0.5 text-[11px] text-muted-foreground">Joined {formatDate(u.created_at)}</p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function KpiCard({
+  label, value, sub, icon, tone, onClick,
+}: {
+  label: string; value: string; sub: string; icon: React.ReactNode;
+  tone: "primary" | "warning" | "destructive" | "muted"; onClick?: () => void;
+}) {
+  const toneClass =
+    tone === "primary" ? "text-primary bg-primary/15 ring-primary/30"
+    : tone === "warning" ? "text-warning bg-warning/15 ring-warning/30"
+    : tone === "destructive" ? "text-destructive bg-destructive/15 ring-destructive/30"
+    : "text-muted-foreground bg-white/5 ring-white/10";
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="rounded-2xl glass p-5 text-left transition hover:-translate-y-0.5 hover:bg-white/[0.04]"
+    >
+      <div className="mb-3 flex items-center justify-between">
+        <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{label}</span>
+        <span className={`inline-flex h-9 w-9 items-center justify-center rounded-lg ring-1 ${toneClass}`}>{icon}</span>
+      </div>
+      <p className="font-display text-3xl font-bold">{value}</p>
+      <p className="mt-1 text-xs text-muted-foreground">{sub}</p>
+    </button>
+  );
+}
+
 // ============ USERS TAB ============
 function UsersTab() {
   const [rows, setRows] = useState<UserRow[]>([]);
