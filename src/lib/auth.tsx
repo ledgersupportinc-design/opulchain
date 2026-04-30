@@ -32,13 +32,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<Role | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [sessionLoading, setSessionLoading] = useState(true);
+  const [roleLoading, setRoleLoading] = useState(false);
 
   const loadRole = async (userId: string | undefined) => {
     if (!userId) {
       setRole(null);
+      setRoleLoading(false);
       return;
     }
+    setRoleLoading(true);
     const { data } = await withSchemaRetry<Array<{ role: Role }>>(() => supabase
       .from("user_roles")
       .select("role")
@@ -49,6 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Default to "user" if no rows (or transient error) so the app doesn't get stuck.
       setRole("user");
     }
+    setRoleLoading(false);
   };
 
   useEffect(() => {
@@ -58,9 +62,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(newSession?.user ?? null);
       // Defer role lookup so we don't block the auth callback.
       if (newSession?.user) {
+        setRoleLoading(true);
         setTimeout(() => loadRole(newSession.user.id), 0);
       } else {
         setRole(null);
+        setRoleLoading(false);
       }
     });
 
@@ -68,14 +74,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(s);
       setUser(s?.user ?? null);
       if (s?.user) {
-        loadRole(s.user.id).finally(() => setLoading(false));
+        loadRole(s.user.id).finally(() => setSessionLoading(false));
       } else {
-        setLoading(false);
+        setSessionLoading(false);
       }
     });
 
     return () => sub.subscription.unsubscribe();
   }, []);
+
+  const loading = sessionLoading || (!!user && roleLoading && role === null);
 
   const value: AuthContextValue = {
     session,
