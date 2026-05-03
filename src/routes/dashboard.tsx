@@ -43,8 +43,7 @@ function Dashboard() {
   useEffect(() => {
     if (loading) return;
     if (!user) navigate({ to: "/login" });
-    else if (isAdmin) navigate({ to: "/admin" });
-  }, [loading, user, isAdmin, navigate]);
+  }, [loading, user, navigate]);
 
   const load = useCallback(async () => {
     if (!user) return;
