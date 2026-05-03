@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
-import { ArrowDownToLine, ArrowUpFromLine, Wallet, Loader2, Inbox, ShieldCheck, ArrowRight } from "lucide-react";
+import { ArrowDownToLine, ArrowUpFromLine, Wallet, Loader2, Inbox, ShieldCheck, ArrowRight, MessageSquare } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { BtcLogo, UsdtLogo } from "@/components/CryptoLogos";
