@@ -21,9 +21,11 @@ export const Route = createFileRoute("/admin")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  validateSearch: (search: Record<string, unknown>) => ({
-    tab: (search.tab as Tab | undefined) ?? undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): { tab?: Tab } => {
+    const t = search.tab;
+    const valid: Tab[] = ["overview", "users", "deposits", "withdrawals", "chats", "wallets", "announcements"];
+    return valid.includes(t as Tab) ? { tab: t as Tab } : {};
+  },
   component: AdminPage,
 });
 
