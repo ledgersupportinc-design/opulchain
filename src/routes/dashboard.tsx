@@ -106,21 +106,47 @@ function Dashboard() {
           </header>
 
           {isAdmin && (
-            <Link
-              to="/admin"
-              className="group mb-6 flex items-center justify-between gap-4 rounded-2xl border border-gold/30 bg-gradient-to-r from-gold/15 via-gold/10 to-transparent p-5 transition hover:border-gold/50 hover:from-gold/20 fade-in"
-            >
-              <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gold/20 text-gold ring-1 ring-gold/40">
-                  <ShieldCheck className="h-6 w-6" />
+            <div className="mb-6 rounded-2xl border border-gold/30 bg-gradient-to-r from-gold/15 via-gold/10 to-transparent p-5 fade-in">
+              <Link
+                to="/admin"
+                search={{}}
+                className="group flex items-center justify-between gap-4"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gold/20 text-gold ring-1 ring-gold/40">
+                    <ShieldCheck className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <p className="font-display text-base font-semibold sm:text-lg">Admin Panel</p>
+                    <p className="text-xs text-muted-foreground sm:text-sm">Manage users, approve transactions, reply to support chats.</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-display text-base font-semibold sm:text-lg">Admin Panel</p>
-                  <p className="text-xs text-muted-foreground sm:text-sm">Manage users, approve transactions, reply to support chats.</p>
-                </div>
+                <ArrowRight className="h-5 w-5 text-gold transition group-hover:translate-x-1" />
+              </Link>
+              <div className="mt-4 grid grid-cols-1 gap-2 border-t border-gold/20 pt-4 sm:grid-cols-3">
+                <Link
+                  to="/admin"
+                  search={{ tab: "deposits" }}
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-success/15 px-3 py-2.5 text-xs font-semibold text-success ring-1 ring-success/30 transition hover:bg-success/25 sm:text-sm"
+                >
+                  <ArrowDownToLine className="h-4 w-4" /> Pending Deposits
+                </Link>
+                <Link
+                  to="/admin"
+                  search={{ tab: "withdrawals" }}
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-warning/15 px-3 py-2.5 text-xs font-semibold text-warning ring-1 ring-warning/30 transition hover:bg-warning/25 sm:text-sm"
+                >
+                  <ArrowUpFromLine className="h-4 w-4" /> Pending Withdrawals
+                </Link>
+                <Link
+                  to="/admin"
+                  search={{ tab: "chats" }}
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary/15 px-3 py-2.5 text-xs font-semibold text-primary ring-1 ring-primary/30 transition hover:bg-primary/25 sm:text-sm"
+                >
+                  <MessageSquare className="h-4 w-4" /> Support Chats
+                </Link>
               </div>
-              <ArrowRight className="h-5 w-5 text-gold transition group-hover:translate-x-1" />
-            </Link>
+            </div>
           )}
 
           {/* Portfolio cards */}
