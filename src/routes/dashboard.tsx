@@ -1,6 +1,6 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
-import { ArrowDownToLine, ArrowUpFromLine, Wallet, Loader2, Inbox } from "lucide-react";
+import { ArrowDownToLine, ArrowUpFromLine, Wallet, Loader2, Inbox, ShieldCheck, ArrowRight } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { BtcLogo, UsdtLogo } from "@/components/CryptoLogos";
@@ -43,8 +43,7 @@ function Dashboard() {
   useEffect(() => {
     if (loading) return;
     if (!user) navigate({ to: "/login" });
-    else if (isAdmin) navigate({ to: "/admin" });
-  }, [loading, user, isAdmin, navigate]);
+  }, [loading, user, navigate]);
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -105,6 +104,24 @@ function Dashboard() {
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">Here's your portfolio overview.</p>
           </header>
+
+          {isAdmin && (
+            <Link
+              to="/admin"
+              className="group mb-6 flex items-center justify-between gap-4 rounded-2xl border border-gold/30 bg-gradient-to-r from-gold/15 via-gold/10 to-transparent p-5 transition hover:border-gold/50 hover:from-gold/20 fade-in"
+            >
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gold/20 text-gold ring-1 ring-gold/40">
+                  <ShieldCheck className="h-6 w-6" />
+                </div>
+                <div>
+                  <p className="font-display text-base font-semibold sm:text-lg">Admin Panel</p>
+                  <p className="text-xs text-muted-foreground sm:text-sm">Manage users, approve transactions, reply to support chats.</p>
+                </div>
+              </div>
+              <ArrowRight className="h-5 w-5 text-gold transition group-hover:translate-x-1" />
+            </Link>
+          )}
 
           {/* Portfolio cards */}
           <section className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
