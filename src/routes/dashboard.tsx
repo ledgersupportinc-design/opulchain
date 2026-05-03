@@ -105,6 +105,24 @@ function Dashboard() {
             <p className="mt-1 text-sm text-muted-foreground">Here's your portfolio overview.</p>
           </header>
 
+          {isAdmin && (
+            <Link
+              to="/admin"
+              className="group mb-6 flex items-center justify-between gap-4 rounded-2xl border border-gold/30 bg-gradient-to-r from-gold/15 via-gold/10 to-transparent p-5 transition hover:border-gold/50 hover:from-gold/20 fade-in"
+            >
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gold/20 text-gold ring-1 ring-gold/40">
+                  <ShieldCheck className="h-6 w-6" />
+                </div>
+                <div>
+                  <p className="font-display text-base font-semibold sm:text-lg">Admin Panel</p>
+                  <p className="text-xs text-muted-foreground sm:text-sm">Manage users, approve transactions, reply to support chats.</p>
+                </div>
+              </div>
+              <ArrowRight className="h-5 w-5 text-gold transition group-hover:translate-x-1" />
+            </Link>
+          )}
+
           {/* Portfolio cards */}
           <section className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
             <div className="rounded-2xl glass p-6 fade-in">
