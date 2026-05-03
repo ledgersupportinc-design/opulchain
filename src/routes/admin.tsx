@@ -21,6 +21,9 @@ export const Route = createFileRoute("/admin")({
       { name: "robots", content: "noindex" },
     ],
   }),
+  validateSearch: (search: Record<string, unknown>) => ({
+    tab: (search.tab as Tab | undefined) ?? undefined,
+  }),
   component: AdminPage,
 });
 
