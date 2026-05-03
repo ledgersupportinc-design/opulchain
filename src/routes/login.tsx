@@ -78,7 +78,7 @@ function Login() {
       isAdmin = !!roles?.some((r) => r.role === "admin");
     }
     toast.success(isAdmin ? "Welcome back, admin!" : "Welcome back!");
-    navigate({ to: isAdmin ? "/admin" : "/dashboard" });
+    navigate({ to: "/dashboard" });
   };
 
   return (
