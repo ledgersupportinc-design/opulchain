@@ -78,7 +78,7 @@ export function Navbar() {
                   </button>
                   {isAdmin && (
                     <button
-                      onClick={() => { setOpen(false); navigate({ to: "/admin" }); }}
+                      onClick={() => { setOpen(false); navigate({ to: "/admin", search: {} }); }}
                       className="flex w-full items-center gap-2 px-4 py-2 text-sm text-gold hover:bg-white/10"
                     >
                       <Shield className="h-4 w-4" /> Admin Panel

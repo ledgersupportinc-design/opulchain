@@ -21,6 +21,11 @@ export const Route = createFileRoute("/admin")({
       { name: "robots", content: "noindex" },
     ],
   }),
+  validateSearch: (search: Record<string, unknown>): { tab?: Tab } => {
+    const t = search.tab;
+    const valid: Tab[] = ["overview", "users", "deposits", "withdrawals", "chats", "wallets", "announcements"];
+    return valid.includes(t as Tab) ? { tab: t as Tab } : {};
+  },
   component: AdminPage,
 });
 
@@ -46,8 +51,14 @@ interface ChatThread {
 function AdminPage() {
   const { user, isAdmin, loading } = useAuth();
   const navigate = useNavigate();
-  const [tab, setTab] = useState<Tab>("overview");
+  const search = Route.useSearch();
+  const [tab, setTab] = useState<Tab>(search.tab ?? "overview");
   const [permsOpen, setPermsOpen] = useState(false);
+
+  useEffect(() => {
+    if (search.tab && search.tab !== tab) setTab(search.tab);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search.tab]);
 
   useEffect(() => {
     if (loading) return;
