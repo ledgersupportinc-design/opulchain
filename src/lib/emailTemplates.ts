@@ -133,9 +133,9 @@ export function buildEmail(name: TemplateName, vars: EmailVars) {
           bodyHtml: `
             <p>${greet(vars.firstName)}</p>
             <p>We're letting you know that your OpulChain account was just signed in to.</p>
-            ${vars.when ? `<p style="margin:6px 0;"><strong>Time:</strong> ${vars.when}</p>` : ""}
-            ${vars.ip ? `<p style="margin:6px 0;"><strong>IP:</strong> ${vars.ip}</p>` : ""}
-            ${vars.userAgent ? `<p style="margin:6px 0;"><strong>Device:</strong> ${vars.userAgent}</p>` : ""}
+            ${vars.when ? `<p style="margin:6px 0;"><strong>Time:</strong> ${esc(vars.when)}</p>` : ""}
+            ${vars.ip ? `<p style="margin:6px 0;"><strong>IP:</strong> ${esc(vars.ip)}</p>` : ""}
+            ${vars.userAgent ? `<p style="margin:6px 0;"><strong>Device:</strong> ${esc(vars.userAgent)}</p>` : ""}
             <p>If this was you, no action is needed. If you don't recognize this activity, please reset your password immediately.</p>`,
           ...cta,
         }),
