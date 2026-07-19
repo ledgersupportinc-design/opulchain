@@ -83,11 +83,19 @@ function shell(opts: {
 </html>`;
 }
 
+const esc = (s: unknown) =>
+  String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
 const greet = (n?: string | null) =>
-  n && n.trim() ? `Hi ${n.trim().split(/\s+/)[0]},` : `Hi there,`;
+  n && n.trim() ? `Hi ${esc(n.trim().split(/\s+/)[0])},` : `Hi there,`;
 
 const fmt = (a: number | string | undefined, asset?: string) =>
-  a === undefined ? "" : `${a}${asset ? " " + asset : ""}`;
+  a === undefined ? "" : `${esc(a)}${asset ? " " + esc(asset) : ""}`;
 
 export type TemplateName =
   | "welcome"
