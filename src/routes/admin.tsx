@@ -1,4 +1,5 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, redirect } from "@tanstack/react-router";
+import { verifyAdmin } from "@/lib/adminGuard.functions";
 import { PermissionsModal } from "@/components/PermissionsModal";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { Loader2, Users, ArrowDownToLine, ArrowUpFromLine, MessageSquare, Pencil, Check, X, Send, ShieldAlert, ShieldCheck, Wallet as WalletIcon, Save, Megaphone, LayoutDashboard, TrendingUp, Activity, Clock } from "lucide-react";
