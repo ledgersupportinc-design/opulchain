@@ -207,7 +207,7 @@ export function buildEmail(name: TemplateName, vars: EmailVars) {
           bodyHtml: `
             <p>${greet(vars.firstName)}</p>
             <p>Unfortunately, your withdrawal request for <strong>${fmt(vars.amount, vars.asset)}</strong> was not approved.</p>
-            ${vars.reason ? `<p><strong>Reason:</strong> ${vars.reason}</p>` : ""}
+            ${vars.reason ? `<p><strong>Reason:</strong> ${esc(vars.reason)}</p>` : ""}
             <p>Please contact support if you have any questions or would like to try again.</p>`,
           ...cta,
         }),
