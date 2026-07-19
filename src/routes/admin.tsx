@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { sendEmail } from "@/lib/sendEmail";
 
 export const Route = createFileRoute("/admin")({
+  ssr: false,
   head: () => ({
     meta: [
       { title: "Admin Panel — OpulChain" },
@@ -26,6 +27,13 @@ export const Route = createFileRoute("/admin")({
     const t = search.tab;
     const valid: Tab[] = ["overview", "users", "deposits", "withdrawals", "chats", "wallets", "announcements"];
     return valid.includes(t as Tab) ? { tab: t as Tab } : {};
+  },
+  beforeLoad: async () => {
+    try {
+      await verifyAdmin();
+    } catch {
+      throw redirect({ to: "/dashboard" });
+    }
   },
   component: AdminPage,
 });
