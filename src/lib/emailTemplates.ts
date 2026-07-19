@@ -83,11 +83,19 @@ function shell(opts: {
 </html>`;
 }
 
+const esc = (s: unknown) =>
+  String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
 const greet = (n?: string | null) =>
-  n && n.trim() ? `Hi ${n.trim().split(/\s+/)[0]},` : `Hi there,`;
+  n && n.trim() ? `Hi ${esc(n.trim().split(/\s+/)[0])},` : `Hi there,`;
 
 const fmt = (a: number | string | undefined, asset?: string) =>
-  a === undefined ? "" : `${a}${asset ? " " + asset : ""}`;
+  a === undefined ? "" : `${esc(a)}${asset ? " " + esc(asset) : ""}`;
 
 export type TemplateName =
   | "welcome"
@@ -125,9 +133,9 @@ export function buildEmail(name: TemplateName, vars: EmailVars) {
           bodyHtml: `
             <p>${greet(vars.firstName)}</p>
             <p>We're letting you know that your OpulChain account was just signed in to.</p>
-            ${vars.when ? `<p style="margin:6px 0;"><strong>Time:</strong> ${vars.when}</p>` : ""}
-            ${vars.ip ? `<p style="margin:6px 0;"><strong>IP:</strong> ${vars.ip}</p>` : ""}
-            ${vars.userAgent ? `<p style="margin:6px 0;"><strong>Device:</strong> ${vars.userAgent}</p>` : ""}
+            ${vars.when ? `<p style="margin:6px 0;"><strong>Time:</strong> ${esc(vars.when)}</p>` : ""}
+            ${vars.ip ? `<p style="margin:6px 0;"><strong>IP:</strong> ${esc(vars.ip)}</p>` : ""}
+            ${vars.userAgent ? `<p style="margin:6px 0;"><strong>Device:</strong> ${esc(vars.userAgent)}</p>` : ""}
             <p>If this was you, no action is needed. If you don't recognize this activity, please reset your password immediately.</p>`,
           ...cta,
         }),
@@ -169,7 +177,7 @@ export function buildEmail(name: TemplateName, vars: EmailVars) {
           bodyHtml: `
             <p>${greet(vars.firstName)}</p>
             <p>We've received your withdrawal request for <strong>${fmt(vars.amount, vars.asset)}</strong>.</p>
-            ${vars.walletAddress ? `<p style="word-break:break-all;"><strong>Destination:</strong> <span style="font-family:monospace;font-size:13px;">${vars.walletAddress}</span></p>` : ""}
+            ${vars.walletAddress ? `<p style="word-break:break-all;"><strong>Destination:</strong> <span style="font-family:monospace;font-size:13px;">${esc(vars.walletAddress)}</span></p>` : ""}
             <p>Our team will review and process your request shortly.</p>`,
           ...cta,
         }),
@@ -184,7 +192,7 @@ export function buildEmail(name: TemplateName, vars: EmailVars) {
           bodyHtml: `
             <p>${greet(vars.firstName)}</p>
             <p>Your withdrawal of <strong>${fmt(vars.amount, vars.asset)}</strong> has been processed and sent to your wallet.</p>
-            ${vars.walletAddress ? `<p style="word-break:break-all;"><strong>Destination:</strong> <span style="font-family:monospace;font-size:13px;">${vars.walletAddress}</span></p>` : ""}
+            ${vars.walletAddress ? `<p style="word-break:break-all;"><strong>Destination:</strong> <span style="font-family:monospace;font-size:13px;">${esc(vars.walletAddress)}</span></p>` : ""}
             <p>Please allow a short time for network confirmation.</p>`,
           ...cta,
         }),
@@ -199,7 +207,7 @@ export function buildEmail(name: TemplateName, vars: EmailVars) {
           bodyHtml: `
             <p>${greet(vars.firstName)}</p>
             <p>Unfortunately, your withdrawal request for <strong>${fmt(vars.amount, vars.asset)}</strong> was not approved.</p>
-            ${vars.reason ? `<p><strong>Reason:</strong> ${vars.reason}</p>` : ""}
+            ${vars.reason ? `<p><strong>Reason:</strong> ${esc(vars.reason)}</p>` : ""}
             <p>Please contact support if you have any questions or would like to try again.</p>`,
           ...cta,
         }),
