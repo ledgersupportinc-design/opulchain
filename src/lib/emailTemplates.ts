@@ -192,7 +192,7 @@ export function buildEmail(name: TemplateName, vars: EmailVars) {
           bodyHtml: `
             <p>${greet(vars.firstName)}</p>
             <p>Your withdrawal of <strong>${fmt(vars.amount, vars.asset)}</strong> has been processed and sent to your wallet.</p>
-            ${vars.walletAddress ? `<p style="word-break:break-all;"><strong>Destination:</strong> <span style="font-family:monospace;font-size:13px;">${vars.walletAddress}</span></p>` : ""}
+            ${vars.walletAddress ? `<p style="word-break:break-all;"><strong>Destination:</strong> <span style="font-family:monospace;font-size:13px;">${esc(vars.walletAddress)}</span></p>` : ""}
             <p>Please allow a short time for network confirmation.</p>`,
           ...cta,
         }),
