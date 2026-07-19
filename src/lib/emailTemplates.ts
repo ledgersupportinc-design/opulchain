@@ -177,7 +177,7 @@ export function buildEmail(name: TemplateName, vars: EmailVars) {
           bodyHtml: `
             <p>${greet(vars.firstName)}</p>
             <p>We've received your withdrawal request for <strong>${fmt(vars.amount, vars.asset)}</strong>.</p>
-            ${vars.walletAddress ? `<p style="word-break:break-all;"><strong>Destination:</strong> <span style="font-family:monospace;font-size:13px;">${vars.walletAddress}</span></p>` : ""}
+            ${vars.walletAddress ? `<p style="word-break:break-all;"><strong>Destination:</strong> <span style="font-family:monospace;font-size:13px;">${esc(vars.walletAddress)}</span></p>` : ""}
             <p>Our team will review and process your request shortly.</p>`,
           ...cta,
         }),
