@@ -599,7 +599,12 @@ function ActionModal({ tx, mode, type, onClose }: { tx: TxRow; mode: "approve" |
   const [saving, setSaving] = useState(false);
 
   const submit = async () => {
+    if (!isApprove && !note.trim()) {
+      toast.error("A rejection reason is required.");
+      return;
+    }
     setSaving(true);
+    const txDate = new Date(tx.created_at).toLocaleString();
     if (isApprove) {
       const newStatus = "completed";
       // Update wallet balance if deposit-approve or withdrawal-complete
@@ -619,8 +624,14 @@ function ActionModal({ tx, mode, type, onClose }: { tx: TxRow; mode: "approve" |
       }
       const update: { status: "completed"; admin_note: string | null; amount?: number } = { status: newStatus, admin_note: note || null };
       if (type === "deposit") update.amount = Number(amount);
-      const { error } = await supabase.from("transactions").update(update).eq("id", tx.id);
+      // Only update rows still pending — prevents a double-click sending two emails
+      const { data: updated, error } = await supabase
+        .from("transactions").update(update).eq("id", tx.id).eq("status", "pending").select("id");
       if (error) { toast.error(error.message); setSaving(false); return; }
+      if (!updated || updated.length === 0) {
+        toast.info("This transaction was already processed.");
+        setSaving(false); onClose(); return;
+      }
       // Fire approval email (non-blocking)
       if (tx.email) {
         const firstName = tx.full_name ?? undefined;
@@ -630,17 +641,33 @@ function ActionModal({ tx, mode, type, onClose }: { tx: TxRow; mode: "approve" |
           amount: type === "deposit" ? Number(amount) : tx.amount,
           asset: tx.asset,
           walletAddress: tx.wallet_address ?? undefined,
+          txId: tx.id,
+          date: txDate,
         });
       }
       toast.success(type === "deposit" ? "Deposit approved & balance credited" : "Withdrawal marked complete");
     } else {
-      const { error } = await supabase.from("transactions").update({ status: "rejected", admin_note: note || null }).eq("id", tx.id);
+      const { data: updated, error } = await supabase
+        .from("transactions")
+        .update({ status: "rejected", admin_note: note.trim() })
+        .eq("id", tx.id).eq("status", "pending").select("id");
       if (error) { toast.error(error.message); setSaving(false); return; }
-      // Fire rejection email — only meaningful for withdrawals per requirements
-      if (type === "withdrawal" && tx.email) {
+      if (!updated || updated.length === 0) {
+        toast.info("This transaction was already processed.");
+        setSaving(false); onClose(); return;
+      }
+      // Fire rejection email with the admin's reason (non-blocking)
+      if (tx.email) {
         const firstName = tx.full_name ?? undefined;
-        void sendEmail(tx.email, "withdrawal_rejected", {
-          firstName, amount: tx.amount, asset: tx.asset, reason: note || undefined,
+        const tmpl = type === "deposit" ? "deposit_rejected" : "withdrawal_rejected";
+        void sendEmail(tx.email, tmpl, {
+          firstName,
+          amount: tx.amount,
+          asset: tx.asset,
+          walletAddress: tx.wallet_address ?? undefined,
+          reason: note.trim(),
+          txId: tx.id,
+          date: txDate,
         });
       }
       toast.success("Marked as rejected");
@@ -648,6 +675,7 @@ function ActionModal({ tx, mode, type, onClose }: { tx: TxRow; mode: "approve" |
     setSaving(false);
     onClose();
   };
+
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
