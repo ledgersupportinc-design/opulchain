@@ -690,14 +690,23 @@ function ActionModal({ tx, mode, type, onClose }: { tx: TxRow; mode: "approve" |
             </div>
           )}
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Note (optional)</label>
-            <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} className="input-glow w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm" />
+            <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
+              {isApprove ? "Note (optional)" : "Rejection reason (required — sent to the user)"}
+            </label>
+            <textarea
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              rows={2}
+              placeholder={isApprove ? "" : "e.g. No matching on-chain transaction found"}
+              className={`input-glow w-full rounded-lg border bg-white/5 px-3 py-2 text-sm ${!isApprove && !note.trim() ? "border-destructive/50" : "border-white/10"}`}
+            />
           </div>
           <div className="flex gap-2">
             <Button variant="outline" className="flex-1" onClick={onClose}>Cancel</Button>
-            <Button variant={isApprove ? "success" : "destructive"} className="flex-1" onClick={submit} disabled={saving}>
+            <Button variant={isApprove ? "success" : "destructive"} className="flex-1" onClick={submit} disabled={saving || (!isApprove && !note.trim())}>
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : isApprove ? "Confirm" : "Reject"}
             </Button>
+
           </div>
         </div>
       </DialogContent>
