@@ -10,6 +10,10 @@ export type EmailVars = {
   ip?: string;
   userAgent?: string;
   when?: string;
+  /** Transaction reference id */
+  txId?: string;
+  /** Human readable transaction date */
+  date?: string;
 };
 
 const DASHBOARD_URL =
@@ -97,17 +101,40 @@ const greet = (n?: string | null) =>
 const fmt = (a: number | string | undefined, asset?: string) =>
   a === undefined ? "" : `${esc(a)}${asset ? " " + esc(asset) : ""}`;
 
+/** Renders a transaction details table (type, amount, ref, date, status). */
+function details(
+  kind: "Deposit" | "Withdrawal",
+  status: "Pending" | "Approved" | "Rejected",
+  vars: EmailVars
+) {
+  const row = (label: string, value?: string) =>
+    value
+      ? `<tr><td style="padding:6px 0;color:${BRAND.muted};font-size:13px;">${esc(label)}</td><td style="padding:6px 0;text-align:right;font-size:13px;color:${BRAND.cardText};word-break:break-all;">${value}</td></tr>`
+      : "";
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:20px;border-top:1px solid #e5e7eb;">
+    ${row("Type", esc(kind))}
+    ${row("Status", esc(status))}
+    ${row("Amount", vars.amount !== undefined ? `<strong>${fmt(vars.amount, vars.asset)}</strong>` : undefined)}
+    ${row("Currency", vars.asset ? esc(vars.asset) : undefined)}
+    ${row("Reference ID", vars.txId ? `<span style="font-family:monospace;">${esc(vars.txId)}</span>` : undefined)}
+    ${row("Date", vars.date ? esc(vars.date) : undefined)}
+    ${row("Destination", vars.walletAddress ? `<span style="font-family:monospace;">${esc(vars.walletAddress)}</span>` : undefined)}
+  </table>`;
+}
+
 export type TemplateName =
   | "welcome"
   | "login_alert"
   | "deposit_submitted"
   | "deposit_approved"
+  | "deposit_rejected"
   | "withdrawal_submitted"
   | "withdrawal_approved"
   | "withdrawal_rejected";
 
 export function buildEmail(name: TemplateName, vars: EmailVars) {
   const cta = { ctaLabel: "Go to Dashboard", ctaUrl: DASHBOARD_URL };
+
 
   switch (name) {
     case "welcome":
@@ -143,13 +170,14 @@ export function buildEmail(name: TemplateName, vars: EmailVars) {
 
     case "deposit_submitted":
       return {
-        subject: "Deposit request received",
+        subject: "Deposit request received — pending review",
         html: shell({
           preheader: "We've received your deposit request.",
-          heading: "Deposit request received",
+          heading: "Deposit pending review",
           bodyHtml: `
             <p>${greet(vars.firstName)}</p>
-            <p>We've received your deposit request for <strong>${fmt(vars.amount, vars.asset)}</strong>. Once your transaction is confirmed on-chain, we'll credit your balance — usually within 24 hours.</p>`,
+            <p>We've received your deposit request for <strong>${fmt(vars.amount, vars.asset)}</strong>. It is currently <strong>pending</strong> review. Once your transaction is confirmed on-chain, we'll credit your balance — usually within 24 hours.</p>
+            ${details("Deposit", "Pending", vars)}`,
           ...cta,
         }),
       };
@@ -163,22 +191,37 @@ export function buildEmail(name: TemplateName, vars: EmailVars) {
           bodyHtml: `
             <p>${greet(vars.firstName)}</p>
             <p>Good news — your deposit of <strong>${fmt(vars.amount, vars.asset)}</strong> has been approved and credited to your OpulChain wallet.</p>
-            <p>You can view the updated balance and start trading from your dashboard.</p>`,
+            ${details("Deposit", "Approved", vars)}`,
+          ...cta,
+        }),
+      };
+
+    case "deposit_rejected":
+      return {
+        subject: "Deposit request not approved",
+        html: shell({
+          preheader: "Action needed on your deposit request.",
+          heading: "Deposit not approved",
+          bodyHtml: `
+            <p>${greet(vars.firstName)}</p>
+            <p>Unfortunately, your deposit of <strong>${fmt(vars.amount, vars.asset)}</strong> was not approved.</p>
+            ${vars.reason ? `<p style="background:#fef2f2;border-left:3px solid #dc2626;padding:10px 12px;margin:16px 0;"><strong>Reason:</strong> ${esc(vars.reason)}</p>` : ""}
+            ${details("Deposit", "Rejected", vars)}
+            <p>Please contact support if you have any questions.</p>`,
           ...cta,
         }),
       };
 
     case "withdrawal_submitted":
       return {
-        subject: "Withdrawal request received",
+        subject: "Withdrawal request received — pending review",
         html: shell({
           preheader: "Your withdrawal request is being reviewed.",
-          heading: "Withdrawal request received",
+          heading: "Withdrawal pending review",
           bodyHtml: `
             <p>${greet(vars.firstName)}</p>
-            <p>We've received your withdrawal request for <strong>${fmt(vars.amount, vars.asset)}</strong>.</p>
-            ${vars.walletAddress ? `<p style="word-break:break-all;"><strong>Destination:</strong> <span style="font-family:monospace;font-size:13px;">${esc(vars.walletAddress)}</span></p>` : ""}
-            <p>Our team will review and process your request shortly.</p>`,
+            <p>We've received your withdrawal request for <strong>${fmt(vars.amount, vars.asset)}</strong>. It is currently <strong>pending</strong> review by our team.</p>
+            ${details("Withdrawal", "Pending", vars)}`,
           ...cta,
         }),
       };
@@ -191,8 +234,8 @@ export function buildEmail(name: TemplateName, vars: EmailVars) {
           heading: "Withdrawal processed",
           bodyHtml: `
             <p>${greet(vars.firstName)}</p>
-            <p>Your withdrawal of <strong>${fmt(vars.amount, vars.asset)}</strong> has been processed and sent to your wallet.</p>
-            ${vars.walletAddress ? `<p style="word-break:break-all;"><strong>Destination:</strong> <span style="font-family:monospace;font-size:13px;">${esc(vars.walletAddress)}</span></p>` : ""}
+            <p>Your withdrawal of <strong>${fmt(vars.amount, vars.asset)}</strong> has been approved and sent to your wallet.</p>
+            ${details("Withdrawal", "Approved", vars)}
             <p>Please allow a short time for network confirmation.</p>`,
           ...cta,
         }),
@@ -207,10 +250,12 @@ export function buildEmail(name: TemplateName, vars: EmailVars) {
           bodyHtml: `
             <p>${greet(vars.firstName)}</p>
             <p>Unfortunately, your withdrawal request for <strong>${fmt(vars.amount, vars.asset)}</strong> was not approved.</p>
-            ${vars.reason ? `<p><strong>Reason:</strong> ${esc(vars.reason)}</p>` : ""}
+            ${vars.reason ? `<p style="background:#fef2f2;border-left:3px solid #dc2626;padding:10px 12px;margin:16px 0;"><strong>Reason:</strong> ${esc(vars.reason)}</p>` : ""}
+            ${details("Withdrawal", "Rejected", vars)}
             <p>Please contact support if you have any questions or would like to try again.</p>`,
           ...cta,
         }),
       };
   }
 }
+

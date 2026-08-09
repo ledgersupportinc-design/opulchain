@@ -599,7 +599,12 @@ function ActionModal({ tx, mode, type, onClose }: { tx: TxRow; mode: "approve" |
   const [saving, setSaving] = useState(false);
 
   const submit = async () => {
+    if (!isApprove && !note.trim()) {
+      toast.error("A rejection reason is required.");
+      return;
+    }
     setSaving(true);
+    const txDate = new Date(tx.created_at).toLocaleString();
     if (isApprove) {
       const newStatus = "completed";
       // Update wallet balance if deposit-approve or withdrawal-complete
@@ -619,8 +624,14 @@ function ActionModal({ tx, mode, type, onClose }: { tx: TxRow; mode: "approve" |
       }
       const update: { status: "completed"; admin_note: string | null; amount?: number } = { status: newStatus, admin_note: note || null };
       if (type === "deposit") update.amount = Number(amount);
-      const { error } = await supabase.from("transactions").update(update).eq("id", tx.id);
+      // Only update rows still pending — prevents a double-click sending two emails
+      const { data: updated, error } = await supabase
+        .from("transactions").update(update).eq("id", tx.id).eq("status", "pending").select("id");
       if (error) { toast.error(error.message); setSaving(false); return; }
+      if (!updated || updated.length === 0) {
+        toast.info("This transaction was already processed.");
+        setSaving(false); onClose(); return;
+      }
       // Fire approval email (non-blocking)
       if (tx.email) {
         const firstName = tx.full_name ?? undefined;
@@ -630,17 +641,33 @@ function ActionModal({ tx, mode, type, onClose }: { tx: TxRow; mode: "approve" |
           amount: type === "deposit" ? Number(amount) : tx.amount,
           asset: tx.asset,
           walletAddress: tx.wallet_address ?? undefined,
+          txId: tx.id,
+          date: txDate,
         });
       }
       toast.success(type === "deposit" ? "Deposit approved & balance credited" : "Withdrawal marked complete");
     } else {
-      const { error } = await supabase.from("transactions").update({ status: "rejected", admin_note: note || null }).eq("id", tx.id);
+      const { data: updated, error } = await supabase
+        .from("transactions")
+        .update({ status: "rejected", admin_note: note.trim() })
+        .eq("id", tx.id).eq("status", "pending").select("id");
       if (error) { toast.error(error.message); setSaving(false); return; }
-      // Fire rejection email — only meaningful for withdrawals per requirements
-      if (type === "withdrawal" && tx.email) {
+      if (!updated || updated.length === 0) {
+        toast.info("This transaction was already processed.");
+        setSaving(false); onClose(); return;
+      }
+      // Fire rejection email with the admin's reason (non-blocking)
+      if (tx.email) {
         const firstName = tx.full_name ?? undefined;
-        void sendEmail(tx.email, "withdrawal_rejected", {
-          firstName, amount: tx.amount, asset: tx.asset, reason: note || undefined,
+        const tmpl = type === "deposit" ? "deposit_rejected" : "withdrawal_rejected";
+        void sendEmail(tx.email, tmpl, {
+          firstName,
+          amount: tx.amount,
+          asset: tx.asset,
+          walletAddress: tx.wallet_address ?? undefined,
+          reason: note.trim(),
+          txId: tx.id,
+          date: txDate,
         });
       }
       toast.success("Marked as rejected");
@@ -648,6 +675,7 @@ function ActionModal({ tx, mode, type, onClose }: { tx: TxRow; mode: "approve" |
     setSaving(false);
     onClose();
   };
+
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
@@ -662,14 +690,23 @@ function ActionModal({ tx, mode, type, onClose }: { tx: TxRow; mode: "approve" |
             </div>
           )}
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Note (optional)</label>
-            <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} className="input-glow w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm" />
+            <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
+              {isApprove ? "Note (optional)" : "Rejection reason (required — sent to the user)"}
+            </label>
+            <textarea
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              rows={2}
+              placeholder={isApprove ? "" : "e.g. No matching on-chain transaction found"}
+              className={`input-glow w-full rounded-lg border bg-white/5 px-3 py-2 text-sm ${!isApprove && !note.trim() ? "border-destructive/50" : "border-white/10"}`}
+            />
           </div>
           <div className="flex gap-2">
             <Button variant="outline" className="flex-1" onClick={onClose}>Cancel</Button>
-            <Button variant={isApprove ? "success" : "destructive"} className="flex-1" onClick={submit} disabled={saving}>
+            <Button variant={isApprove ? "success" : "destructive"} className="flex-1" onClick={submit} disabled={saving || (!isApprove && !note.trim())}>
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : isApprove ? "Confirm" : "Reject"}
             </Button>
+
           </div>
         </div>
       </DialogContent>

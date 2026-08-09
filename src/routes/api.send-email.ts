@@ -13,6 +13,7 @@ const VALID_TEMPLATES: TemplateName[] = [
   "login_alert",
   "deposit_submitted",
   "deposit_approved",
+  "deposit_rejected",
   "withdrawal_submitted",
   "withdrawal_approved",
   "withdrawal_rejected",
