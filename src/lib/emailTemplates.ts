@@ -101,17 +101,40 @@ const greet = (n?: string | null) =>
 const fmt = (a: number | string | undefined, asset?: string) =>
   a === undefined ? "" : `${esc(a)}${asset ? " " + esc(asset) : ""}`;
 
+/** Renders a transaction details table (type, amount, ref, date, status). */
+function details(
+  kind: "Deposit" | "Withdrawal",
+  status: "Pending" | "Approved" | "Rejected",
+  vars: EmailVars
+) {
+  const row = (label: string, value?: string) =>
+    value
+      ? `<tr><td style="padding:6px 0;color:${BRAND.muted};font-size:13px;">${esc(label)}</td><td style="padding:6px 0;text-align:right;font-size:13px;color:${BRAND.cardText};word-break:break-all;">${value}</td></tr>`
+      : "";
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:20px;border-top:1px solid #e5e7eb;">
+    ${row("Type", esc(kind))}
+    ${row("Status", esc(status))}
+    ${row("Amount", vars.amount !== undefined ? `<strong>${fmt(vars.amount, vars.asset)}</strong>` : undefined)}
+    ${row("Currency", vars.asset ? esc(vars.asset) : undefined)}
+    ${row("Reference ID", vars.txId ? `<span style="font-family:monospace;">${esc(vars.txId)}</span>` : undefined)}
+    ${row("Date", vars.date ? esc(vars.date) : undefined)}
+    ${row("Destination", vars.walletAddress ? `<span style="font-family:monospace;">${esc(vars.walletAddress)}</span>` : undefined)}
+  </table>`;
+}
+
 export type TemplateName =
   | "welcome"
   | "login_alert"
   | "deposit_submitted"
   | "deposit_approved"
+  | "deposit_rejected"
   | "withdrawal_submitted"
   | "withdrawal_approved"
   | "withdrawal_rejected";
 
 export function buildEmail(name: TemplateName, vars: EmailVars) {
   const cta = { ctaLabel: "Go to Dashboard", ctaUrl: DASHBOARD_URL };
+
 
   switch (name) {
     case "welcome":
