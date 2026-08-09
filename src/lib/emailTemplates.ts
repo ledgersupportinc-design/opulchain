@@ -10,6 +10,10 @@ export type EmailVars = {
   ip?: string;
   userAgent?: string;
   when?: string;
+  /** Transaction reference id */
+  txId?: string;
+  /** Human readable transaction date */
+  date?: string;
 };
 
 const DASHBOARD_URL =
