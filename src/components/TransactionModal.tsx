@@ -142,20 +142,30 @@ export function TransactionModal({
     if (!user) return;
     const amt = Number(amount);
     setSubmitting(true);
-    const { error } = await supabase.from("transactions").insert({
-      user_id: user.id,
-      type: "deposit",
-      asset,
-      amount: amt,
-      wallet_address: null,
-      status: "pending",
-    });
+    const { data: inserted, error } = await supabase
+      .from("transactions")
+      .insert({
+        user_id: user.id,
+        type: "deposit",
+        asset,
+        amount: amt,
+        wallet_address: null,
+        status: "pending",
+      })
+      .select("id,created_at")
+      .maybeSingle();
     setSubmitting(false);
     if (error) { toast.error(error.message); return; }
-    // Fire deposit submitted email (non-blocking)
+    // Fire deposit pending email (non-blocking; failures never block the UI)
     if (user.email) {
       const firstName = (user.user_metadata as { full_name?: string } | undefined)?.full_name;
-      void sendEmail(user.email, "deposit_submitted", { firstName, amount: amt, asset });
+      void sendEmail(user.email, "deposit_submitted", {
+        firstName,
+        amount: amt,
+        asset,
+        txId: inserted?.id,
+        date: new Date(inserted?.created_at ?? Date.now()).toLocaleString(),
+      });
     }
     setDepositStep("submitted");
     toast.success("Deposit submitted");
@@ -176,26 +186,36 @@ export function TransactionModal({
     }
 
     setSubmitting(true);
-    const { error } = await supabase.from("transactions").insert({
-      user_id: user.id,
-      type: "withdrawal",
-      asset,
-      amount: amt,
-      wallet_address: walletAddress.trim(),
-      status: "pending",
-    });
+    const { data: inserted, error } = await supabase
+      .from("transactions")
+      .insert({
+        user_id: user.id,
+        type: "withdrawal",
+        asset,
+        amount: amt,
+        wallet_address: walletAddress.trim(),
+        status: "pending",
+      })
+      .select("id,created_at")
+      .maybeSingle();
     setSubmitting(false);
     if (error) { toast.error(error.message); return; }
-    // Fire withdrawal submitted email (non-blocking)
+    // Fire withdrawal pending email (non-blocking)
     if (user.email) {
       const firstName = (user.user_metadata as { full_name?: string } | undefined)?.full_name;
       void sendEmail(user.email, "withdrawal_submitted", {
-        firstName, amount: amt, asset, walletAddress: walletAddress.trim(),
+        firstName,
+        amount: amt,
+        asset,
+        walletAddress: walletAddress.trim(),
+        txId: inserted?.id,
+        date: new Date(inserted?.created_at ?? Date.now()).toLocaleString(),
       });
     }
     setWithdrawSubmitted(true);
     toast.success("Withdrawal request submitted");
   };
+
 
   const formattedAmount = useMemo(() => {
     const n = Number(amount);
