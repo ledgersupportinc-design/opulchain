@@ -257,7 +257,5 @@ export function buildEmail(name: TemplateName, vars: EmailVars) {
         }),
       };
   }
-
-      };
-  }
 }
+
