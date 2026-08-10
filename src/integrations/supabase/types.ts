@@ -291,10 +291,7 @@ export type Database = {
       }
     }
     Functions: {
-      get_deposit_address: {
-        Args: { _asset: Database["public"]["Enums"]["asset_type"] }
-        Returns: string
-      }
+      [_ in never]: never
     }
     Enums: {
       app_role: "admin" | "user"
