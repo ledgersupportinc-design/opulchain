@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { BtcLogo, UsdtLogo } from "./CryptoLogos";
 import { sendEmail } from "@/lib/sendEmail";
+import { getDepositAddress } from "@/lib/depositAddress.functions";
 
 type Asset = "BTC" | "USDT";
 type Mode = "deposit" | "withdrawal";
