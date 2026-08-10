@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.get_deposit_address(public.asset_type);
