@@ -151,18 +151,39 @@ export const Route = createFileRoute("/api/send-email")({
           });
 
           const data = await res.json().catch(() => ({}));
+          const logBase = {
+            template,
+            recipient: to,
+            userId,
+            txId: (vars as EmailVars)?.txId ?? null,
+          };
           if (!res.ok) {
-            console.error("Resend send failed", res.status, data);
+            // Non-sensitive diagnostics only: no keys, no tokens.
+            console.error("email.send.failed", {
+              ...logBase,
+              providerStatus: res.status,
+              providerError: (data as { message?: string })?.message ?? null,
+            });
             return new Response(
-              JSON.stringify({ error: "Email send failed" }),
+              JSON.stringify({
+                error: "Email send failed",
+                detail: (data as { message?: string })?.message ?? null,
+              }),
               { status: res.status, headers: jsonHeaders }
             );
           }
+
+          console.log("email.send.accepted", {
+            ...logBase,
+            providerStatus: res.status,
+            providerMessageId: (data as { id?: string })?.id ?? null,
+          });
 
           return new Response(JSON.stringify({ ok: true, id: (data as { id?: string })?.id }), {
             status: 200,
             headers: jsonHeaders,
           });
+
         } catch (err) {
           console.error("send-email error", err);
           return new Response(JSON.stringify({ error: "Internal error" }), {
