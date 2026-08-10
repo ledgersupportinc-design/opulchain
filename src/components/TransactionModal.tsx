@@ -69,25 +69,24 @@ export function TransactionModal({
     onOpenChange(o);
   };
 
-  // Load admin wallet addresses when opening a deposit
+  // Load the deposit address for the selected asset (server-side, scoped lookup)
   useEffect(() => {
     if (!open || mode !== "deposit") return;
     let cancelled = false;
     setLoadingAddrs(true);
-    supabase
-      .from("admin_wallets")
-      .select("asset,address")
-      .then(({ data }) => {
+    getDepositAddress({ data: { asset } })
+      .then(({ address }) => {
         if (cancelled) return;
-        const map: Record<Asset, string> = { BTC: "", USDT: "" };
-        for (const row of data ?? []) {
-          if (row.asset === "BTC" || row.asset === "USDT") map[row.asset] = row.address ?? "";
-        }
-        setAdminAddresses(map);
-        setLoadingAddrs(false);
+        setAdminAddresses((prev) => ({ ...prev, [asset]: address }));
+      })
+      .catch(() => {
+        if (!cancelled) setAdminAddresses((prev) => ({ ...prev, [asset]: "" }));
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingAddrs(false);
       });
     return () => { cancelled = true; };
-  }, [open, mode]);
+  }, [open, mode, asset]);
 
   // Load wallet balances when opening a withdrawal
   useEffect(() => {
